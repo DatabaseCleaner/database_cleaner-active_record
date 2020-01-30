@@ -8,6 +8,7 @@
 /spec/support/config.yml
 /tmp/
 !/tmp/.keep
+/.ruby-version
 
 # rspec failure tracking
 .rspec_status

@@ -6,7 +6,7 @@ git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 gemspec
 
 gem "byebug"
-gem "activerecord", "3.0.0"
+gem "activerecord", "3.2.14"
 gem "arel", "1.0.1"
 gem "i18n", "0.4.2"
 gem "mysql2", "0.3.18"

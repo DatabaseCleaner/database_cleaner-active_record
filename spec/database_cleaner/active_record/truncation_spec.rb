@@ -72,10 +72,9 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           end
 
           it "should not truncate views" do
-            allow(connection).to receive(:database_cleaner_table_cache).and_return(%w[widgets dogs])
-            allow(connection).to receive(:database_cleaner_view_cache).and_return(["widgets"])
+            allow(connection).to receive(:database_cleaner_view_cache).and_return(["agents"])
 
-            expect(connection).to receive(:truncate_tables).with(['dogs'])
+            expect(connection).to receive(:truncate_tables).with(['users'])
 
             subject.clean
           end
@@ -86,7 +85,6 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
 
           it "only truncates non-empty tables" do
             pending if helper.db == :sqlite3
-            pending if helper.db == :postgres
 
             User.create!
 
@@ -108,7 +106,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
         context 'when :cache_tables is set to false' do
           it 'does not cache the list of tables to be truncated' do
             expect(connection).not_to receive(:database_cleaner_table_cache)
-            expect(connection).to receive(:tables).and_return([])
+            expect(connection).to receive(:database_tables).and_return([])
 
             allow(connection).to receive(:truncate_tables)
             described_class.new(cache_tables: false).clean

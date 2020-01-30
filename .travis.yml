@@ -1,7 +1,11 @@
 sudo: false
 language: ruby
+services:
+  - mysql
+  - postgresql
 rvm:
   - 2.2.9
 before_install:
   - gem install bundler -v 1.17.2
   - bin/setup
+

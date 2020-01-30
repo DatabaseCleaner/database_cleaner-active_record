@@ -9,6 +9,7 @@
 /tmp/
 !/tmp/.keep
 /.ruby-version
+/.byebug_history
 
 # rspec failure tracking
 .rspec_status

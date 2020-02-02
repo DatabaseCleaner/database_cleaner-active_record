@@ -18,14 +18,13 @@ RSpec.describe DatabaseCleaner::ActiveRecord do
   describe "config_file_location" do
     after do
       # prevent global state leakage
-      DatabaseCleaner::ActiveRecord.config_file_location=nil
-      DatabaseCleaner.app_root = nil
+      DatabaseCleaner::ActiveRecord.config_file_location = nil
     end
 
-    it "should default to \#{DatabaseCleaner.app_root}/config/database.yml" do
+    it "should default to \#{Dir.pwd}/config/database.yml" do
       DatabaseCleaner::ActiveRecord.config_file_location = nil
-      DatabaseCleaner.app_root = "/path/to"
-      expect(DatabaseCleaner::ActiveRecord.config_file_location).to eq '/path/to/config/database.yml'
+      expect(DatabaseCleaner::ActiveRecord.config_file_location).to \
+        eq "#{Dir.pwd}/config/database.yml"
     end
   end
 end

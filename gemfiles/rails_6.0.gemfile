@@ -4,5 +4,6 @@ source "https://rubygems.org"
 
 gem "byebug"
 gem "rails", "~>6.0.0"
+gem "database_cleaner-core", branch: "v2.0.0.beta", git: "https://github.com/DatabaseCleaner/database_cleaner"
 
 gemspec path: "../"

@@ -72,11 +72,12 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           end
 
           it "should not truncate views" do
-            allow(connection).to receive(:database_cleaner_view_cache).and_return(["agents"])
+            allow(connection).to receive(:database_cleaner_view_cache).and_return(["users"])
 
-            expect(connection).to receive(:truncate_tables).with(['users'])
-
-            subject.clean
+            expect { subject.clean }
+              .to change { [User.count, Agent.count] }
+              .from([2,2])
+              .to([2,0])
           end
         end
 
@@ -84,11 +85,15 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           subject { described_class.new(pre_count: true) }
 
           it "only truncates non-empty tables" do
-            pending if helper.db == :sqlite3
+            tables = case helper.db
+              when :mysql2 then ['users']
+              when :postgres then ['public.users']
+              when :sqlite3 then pending
+              end
 
             User.create!
 
-            expect(connection).to receive(:truncate_tables).with(['users'])
+            expect(connection).to receive(:truncate_tables).with(tables)
             subject.clean
           end
         end

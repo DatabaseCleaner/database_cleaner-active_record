@@ -1,153 +1,90 @@
+require 'support/active_record_helper'
 require 'database_cleaner/active_record/transaction'
-require 'active_record'
 
-module DatabaseCleaner
-  module ActiveRecord
-
-    RSpec.describe Transaction do
-      let(:connection) { double("connection") }
-      let(:connection_2) { double("connection_2") }
-      let(:connection_pool) { double("connection_pool") }
-
-      before do
-        allow(::ActiveRecord::Base).to receive(:connection_pool).and_return(connection_pool)
-        allow(connection_pool).to receive(:connections).and_return([connection])
-        allow(::ActiveRecord::Base).to receive(:connection).and_return(connection)
-      end
-
-      describe "#start" do
-        [:begin_transaction, :begin_db_transaction].each do |begin_transaction_method|
-          context "using #{begin_transaction_method}" do
-            before do
-              allow(connection).to receive(:transaction)
-              allow(connection).to receive(begin_transaction_method)
-            end
-
-            it "should increment open transactions if possible" do
-              expect(connection).to receive(:increment_open_transactions)
-              subject.start
-            end
-
-            it "should tell ActiveRecord to increment connection if its not possible to increment current connection" do
-              expect(::ActiveRecord::Base).to receive(:increment_open_transactions)
-              subject.start
-            end
-
-            it "should start a transaction" do
-              allow(connection).to receive(:increment_open_transactions)
-              expect(connection).to receive(begin_transaction_method)
-              expect(connection).to receive(:transaction)
-              subject.start
-            end
-          end
-        end
+RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
+  ActiveRecordHelper.with_all_dbs do |helper|
+    context "using a #{helper.db} connection" do
+      around do |example|
+        helper.setup
+        example.run
+        helper.teardown
       end
 
       describe "#clean" do
-        context "manual accounting of transaction count" do
-          it "should start a transaction" do
-            expect(connection).to receive(:open_transactions).and_return(1)
-
-            allow(connection).to receive(:decrement_open_transactions)
-
-            expect(connection).to receive(:rollback_db_transaction)
-            subject.clean
+        context "after an initial #start" do
+          before do
+            subject.start
+            2.times { User.create! }
+            2.times { Agent.create! }
           end
 
-          it "should decrement open transactions if possible" do
-            expect(connection).to receive(:open_transactions).and_return(1)
-
-            allow(connection).to receive(:rollback_db_transaction)
-
-            expect(connection).to receive(:decrement_open_transactions)
-            subject.clean
-          end
-
-          it "should not try to decrement or rollback if open_transactions is 0 for whatever reason" do
-            expect(connection).to receive(:open_transactions).and_return(0)
-
-            subject.clean
-          end
-
-          it "should decrement connection via ActiveRecord::Base if connection won't" do
-            expect(connection).to receive(:open_transactions).and_return(1)
-            allow(connection).to receive(:rollback_db_transaction)
-
-            expect(::ActiveRecord::Base).to receive(:decrement_open_transactions)
-            subject.clean
-          end
-
-          it "should rollback open transactions in all connections" do
-            allow(connection_pool).to receive(:connections).and_return([connection, connection_2])
-
-            expect(connection).to receive(:open_transactions).and_return(1)
-            allow(connection).to receive(:rollback_db_transaction)
-
-            expect(connection_2).to receive(:open_transactions).and_return(1)
-            allow(connection_2).to receive(:rollback_db_transaction)
-
-            expect(::ActiveRecord::Base).to receive(:decrement_open_transactions).twice
-            subject.clean
-          end
-
-          it "should rollback open transactions in all connections with an open transaction" do
-            allow(connection_pool).to receive(:connections).and_return([connection, connection_2])
-
-            expect(connection).to receive(:open_transactions).and_return(1)
-            allow(connection).to receive(:rollback_db_transaction)
-
-            expect(connection_2).to receive(:open_transactions).and_return(0)
-
-            expect(::ActiveRecord::Base).to receive(:decrement_open_transactions).exactly(1).times
-            subject.clean
+          it "should clean all tables" do
+            expect { subject.clean }
+              .to change { [User.count, Agent.count] }
+              .from([2,2])
+              .to([0,0])
           end
         end
 
-        context "automatic accounting of transaction count (AR 4)" do
-          before { stub_const("ActiveRecord::VERSION::MAJOR", 4) }
-
-          it "should start a transaction" do
-            allow(connection).to receive(:rollback_db_transaction)
-            expect(connection).to receive(:open_transactions).and_return(1)
-
-            expect(connection).not_to receive(:decrement_open_transactions)
-            expect(connection).to receive(:rollback_transaction)
-            subject.clean
+        context "with fixtures before an initial #start" do
+          before do
+            2.times { User.create! }
+            subject.start
+            2.times { Agent.create! }
           end
 
-          it "should decrement open transactions if possible" do
-            allow(connection).to receive(:rollback_transaction)
-            expect(connection).to receive(:open_transactions).and_return(1)
+          it "should not clean fixtures" do
+            expect { subject.clean }
+              .to change { [User.count, Agent.count] }
+              .from([2,2])
+              .to([2,0])
+          end
+        end
 
-            expect(connection).not_to receive(:decrement_open_transactions)
-            subject.clean
+        context "without an initial start" do
+          before do
+            2.times { User.create! }
+            2.times { Agent.create! }
           end
 
-          it "should not try to decrement or rollback if open_transactions is 0 for whatever reason" do
-            expect(connection).to receive(:open_transactions).and_return(0)
-
-            subject.clean
-          end
-
-          it "should decrement connection via ActiveRecord::Base if connection won't" do
-            expect(connection).to receive(:open_transactions).and_return(1)
-            allow(connection).to receive(:rollback_transaction)
-
-            expect(::ActiveRecord::Base).not_to receive(:decrement_open_transactions)
-            subject.clean
+          it "does nothing" do
+            expect { subject.clean }
+              .to_not change { [User.count, Agent.count] }
           end
         end
       end
 
-      describe "#connection_maintains_transaction_count?" do
-        it "should return true if the major active record version is < 4" do
-          stub_const("ActiveRecord::VERSION::MAJOR", 3)
-          expect(subject.connection_maintains_transaction_count?).to be_truthy
+      describe "#cleaning" do
+        context "with records" do
+          it "should clean all tables" do
+            subject.cleaning do
+              2.times { User.create! }
+              2.times { Agent.create! }
+              expect([User.count, Agent.count]).to eq [2,2]
+            end
+            expect([User.count, Agent.count]).to eq [0,0]
+          end
         end
 
-        it "should return false if the major active record version is > 3" do
-          stub_const("ActiveRecord::VERSION::MAJOR", 4)
-          expect(subject.connection_maintains_transaction_count?).to be_falsey
+        context "with fixtures" do
+          it "should not clean fixtures" do
+            2.times { User.create! }
+            subject.cleaning do
+              2.times { Agent.create! }
+              expect([User.count, Agent.count]).to eq [2,2]
+            end
+            expect([User.count, Agent.count]).to eq [2,0]
+          end
+        end
+
+        context "without an initial start" do
+          it "does nothing" do
+            2.times { User.create! }
+            2.times { Agent.create! }
+            expect { subject.cleaning {} }
+              .to_not change { [User.count, Agent.count] }
+              .from([2,2])
+          end
         end
       end
     end

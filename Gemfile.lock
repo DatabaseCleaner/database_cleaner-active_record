@@ -150,7 +150,7 @@ PLATFORMS
 
 DEPENDENCIES
   appraisal
-  bundler (~> 1.16)
+  bundler
   byebug
   database_cleaner-active_record!
   database_cleaner-core!

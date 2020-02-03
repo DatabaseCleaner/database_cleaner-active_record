@@ -35,4 +35,3 @@ class ActiveRecordHelper < DatabaseCleaner::Spec::DatabaseHelper
     @connection = ActiveRecord::Base.connection
   end
 end
-

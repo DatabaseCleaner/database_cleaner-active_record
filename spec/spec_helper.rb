@@ -1,5 +1,5 @@
 require "bundler/setup"
-require 'database_cleaner'
+require 'database_cleaner-active_record'
 require "byebug"
 
 RSpec.configure do |config|

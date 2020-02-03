@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/DatabaseCleaner/database_cleaner
-  revision: 0b3491b970e755234213304a0ab82a13a26d811d
+  revision: 2181127b3e567a78c8db4c49fb4006563a23968b
   branch: v2.0.0.beta
   specs:
     database_cleaner-core (2.0.0.beta)

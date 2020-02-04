@@ -2,6 +2,8 @@ require 'support/active_record_helper'
 require 'database_cleaner/active_record/transaction'
 
 RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
+  subject(:strategy) { described_class.new }
+
   ActiveRecordHelper.with_all_dbs do |helper|
     context "using a #{helper.db} connection" do
       around do |example|
@@ -13,13 +15,13 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
       describe "#clean" do
         context "after an initial #start" do
           before do
-            subject.start
+            strategy.start
             2.times { User.create! }
             2.times { Agent.create! }
           end
 
           it "should clean all tables" do
-            expect { subject.clean }
+            expect { strategy.clean }
               .to change { [User.count, Agent.count] }
               .from([2,2])
               .to([0,0])
@@ -29,12 +31,12 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
         context "with fixtures before an initial #start" do
           before do
             2.times { User.create! }
-            subject.start
+            strategy.start
             2.times { Agent.create! }
           end
 
           it "should not clean fixtures" do
-            expect { subject.clean }
+            expect { strategy.clean }
               .to change { [User.count, Agent.count] }
               .from([2,2])
               .to([2,0])
@@ -48,7 +50,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
           end
 
           it "does nothing" do
-            expect { subject.clean }
+            expect { strategy.clean }
               .to_not change { [User.count, Agent.count] }
           end
         end
@@ -57,7 +59,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
       describe "#cleaning" do
         context "with records" do
           it "should clean all tables" do
-            subject.cleaning do
+            strategy.cleaning do
               2.times { User.create! }
               2.times { Agent.create! }
               expect([User.count, Agent.count]).to eq [2,2]
@@ -69,7 +71,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
         context "with fixtures" do
           it "should not clean fixtures" do
             2.times { User.create! }
-            subject.cleaning do
+            strategy.cleaning do
               2.times { Agent.create! }
               expect([User.count, Agent.count]).to eq [2,2]
             end
@@ -81,7 +83,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
           it "does nothing" do
             2.times { User.create! }
             2.times { Agent.create! }
-            expect { subject.cleaning {} }
+            expect { strategy.cleaning {} }
               .to_not change { [User.count, Agent.count] }
               .from([2,2])
           end

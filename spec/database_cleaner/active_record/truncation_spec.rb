@@ -2,6 +2,8 @@ require 'support/active_record_helper'
 require 'database_cleaner/active_record/truncation'
 
 RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
+  subject(:strategy) { described_class.new }
+
   ActiveRecordHelper.with_all_dbs do |helper|
     context "using a #{helper.db} connection" do
       around do |example|
@@ -25,24 +27,25 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           end
 
           it "should truncate all tables" do
-            expect { subject.clean }
+            expect { strategy.clean }
               .to change { [User.count, Agent.count] }
               .from([2,2])
               .to([0,0])
           end
 
           it "should reset AUTO_INCREMENT index of table" do
-            subject.clean
+            strategy.clean
             expect(User.create.id).to eq 1
           end
 
           xit "should not reset AUTO_INCREMENT index of table if :reset_ids is false" do
-            described_class.new(reset_ids: false).clean
+            strategy = described_class.new(reset_ids: false)
+            strategy.clean
             expect(User.create.id).to eq 3
           end
 
           it "should truncate all tables except for schema_migrations" do
-            subject.clean
+            strategy.clean
             count = connection.select_value("select count(*) from schema_migrations;").to_i
             expect(count).to eq 2
           end
@@ -74,7 +77,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           it "should not truncate views" do
             allow(connection).to receive(:database_cleaner_view_cache).and_return(["users"])
 
-            expect { subject.clean }
+            expect { strategy.clean }
               .to change { [User.count, Agent.count] }
               .from([2,2])
               .to([2,0])
@@ -82,7 +85,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
         end
 
         describe "with pre_count optimization option" do
-          subject { described_class.new(pre_count: true) }
+          subject(:strategy) { described_class.new(pre_count: true) }
 
           it "only truncates non-empty tables" do
             tables = case helper.db
@@ -94,7 +97,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
             User.create!
 
             expect(connection).to receive(:truncate_tables).with(tables)
-            subject.clean
+            strategy.clean
           end
         end
 

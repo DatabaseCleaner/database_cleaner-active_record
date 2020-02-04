@@ -36,6 +36,8 @@ module DatabaseCleaner
     end
 
     RSpec.describe ExampleStrategy do
+      subject(:strategy) { described_class.new }
+
       let(:config_location) { '/path/to/config/database.yml' }
 
       around do |example|
@@ -48,12 +50,12 @@ module DatabaseCleaner
 
       describe "db" do
         it "should store my desired db" do
-          subject.db = :my_db
-          expect(subject.db).to eq :my_db
+          strategy.db = :my_db
+          expect(strategy.db).to eq :my_db
         end
 
         it "should default to :default" do
-          expect(subject.db).to eq :default
+          expect(strategy.db).to eq :default
         end
       end
 
@@ -61,8 +63,8 @@ module DatabaseCleaner
         let(:config_location) { "spec/support/example.database.yml" }
 
         it "should process erb in the config" do
-          subject.db = :my_db
-          expect(subject.connection_hash).to eq({ "database" => "one" })
+          strategy.db = :my_db
+          expect(strategy.connection_hash).to eq({ "database" => "one" })
         end
 
         context 'when config file differs from established ActiveRecord configuration' do
@@ -71,8 +73,8 @@ module DatabaseCleaner
           end
 
           it 'uses the ActiveRecord configuration' do
-            subject.db = :my_db
-            expect(subject.connection_hash).to eq({ "database" => "two"})
+            strategy.db = :my_db
+            expect(strategy.connection_hash).to eq({ "database" => "two"})
           end
         end
 
@@ -82,8 +84,8 @@ module DatabaseCleaner
           end
 
           it 'uses the config file' do
-            subject.db = :my_db
-            expect(subject.connection_hash).to eq({ "database" => "one"})
+            strategy.db = :my_db
+            expect(strategy.connection_hash).to eq({ "database" => "one"})
           end
         end
 
@@ -93,8 +95,8 @@ module DatabaseCleaner
           end
 
           it 'uses the config file' do
-            subject.db = :my_db
-            expect(subject.connection_hash).to eq({ "database" => "one"})
+            strategy.db = :my_db
+            expect(strategy.connection_hash).to eq({ "database" => "one"})
           end
         end
 
@@ -104,8 +106,8 @@ module DatabaseCleaner
           end
 
           it 'uses the config file' do
-            subject.db = :my_db
-            expect(subject.connection_hash).to eq({ "database" => "one"})
+            strategy.db = :my_db
+            expect(strategy.connection_hash).to eq({ "database" => "one"})
           end
         end
 
@@ -115,52 +117,52 @@ module DatabaseCleaner
           end
 
           it "should skip config" do
-            subject.db = :my_db
-            expect(subject.connection_hash).not_to be
+            strategy.db = :my_db
+            expect(strategy.connection_hash).not_to be
           end
         end
 
         it "skips the file when the model is set" do
-          subject.db = FakeModel
-          expect(subject.connection_hash).not_to be
+          strategy.db = FakeModel
+          expect(strategy.connection_hash).not_to be
         end
 
         it "skips the file when the db is set to :default" do
           # to avoid https://github.com/bmabey/database_cleaner/issues/72
-          subject.db = :default
-          expect(subject.connection_hash).not_to be
+          strategy.db = :default
+          expect(strategy.connection_hash).not_to be
         end
       end
 
       describe "connection_class" do
         it "should default to ActiveRecord::Base" do
-          expect(subject.connection_class).to eq ::ActiveRecord::Base
+          expect(strategy.connection_class).to eq ::ActiveRecord::Base
         end
 
         context "with database models" do
           context "connection_hash is set" do
             it "reuses the model's connection" do
-              subject.connection_hash = {}
-              subject.db = FakeModel
-              expect(subject.connection_class).to eq FakeModel
+              strategy.connection_hash = {}
+              strategy.db = FakeModel
+              expect(strategy.connection_class).to eq FakeModel
             end
           end
 
           context "connection_hash is not set" do
             it "reuses the model's connection" do
-              subject.db = FakeModel
-              expect(subject.connection_class).to eq FakeModel
+              strategy.db = FakeModel
+              expect(strategy.connection_class).to eq FakeModel
             end
           end
         end
 
         context "when connection_hash is set" do
           let(:hash) { {} }
-          before { subject.connection_hash = hash }
+          before { strategy.connection_hash = hash }
 
           it "establishes a connection with it" do
             expect(::ActiveRecord::Base).to receive(:establish_connection).with(hash)
-            expect(subject.connection_class).to eq ::ActiveRecord::Base
+            expect(strategy.connection_class).to eq ::ActiveRecord::Base
           end
         end
       end

@@ -6,7 +6,7 @@ require "database_cleaner/active_record/version"
 Gem::Specification.new do |spec|
   spec.name          = "database_cleaner-active_record"
   spec.version       = DatabaseCleaner::ActiveRecord::VERSION
-  spec.authors       = ["Ernesto Tagwerker"]
+  spec.authors       = ["Ernesto Tagwerker", "Micah Geisel"]
   spec.email         = ["ernesto@ombulabs.com"]
 
   spec.summary       = "Strategies for cleaning databases using ActiveRecord. Can be used to ensure a clean state for testing."

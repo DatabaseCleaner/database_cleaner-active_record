@@ -20,6 +20,15 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
       end
 
       describe '#clean' do
+        before do
+          # Clean should not try to truncate database views. If it does, it will raise an error
+          connection.execute "CREATE VIEW view1 AS SELECT * FROM schema_migrations;"
+        end
+
+        after do
+          connection.execute "DROP VIEW view1"
+        end
+
         context "with records" do
           before do
             2.times { User.create! }

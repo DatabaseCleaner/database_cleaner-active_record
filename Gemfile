@@ -9,4 +9,4 @@ gem "byebug"
 
 gem "rails", "~>5.2"
 
-gem "database_cleaner-core", github: "DatabaseCleaner/database_cleaner", branch: "v2.0.0.beta"
+gem "database_cleaner-core", branch: "master", github: "DatabaseCleaner/database_cleaner"

@@ -18,12 +18,7 @@ module DatabaseCleaner
     end
 
     def self.config_file_location
-      @config_file_location ||= begin
-        # Has DC.app_root been set? Check in this intrusive way to avoid triggering deprecation warnings if it hasn't.
-        app_root = DatabaseCleaner.send(:configuration).instance_variable_get(:@app_root)
-        root = app_root || Dir.pwd
-        "#{root}/config/database.yml"
-      end
+      @config_file_location ||= "#{Dir.pwd}/config/database.yml"
     end
 
     module Base

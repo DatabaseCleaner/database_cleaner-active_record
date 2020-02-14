@@ -51,9 +51,10 @@ module DatabaseCleaner::ActiveRecord
       end
     end
 
+    private
+
     def connection_maintains_transaction_count?
       ActiveRecord::VERSION::MAJOR < 4
     end
-
   end
 end

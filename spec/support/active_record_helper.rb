@@ -2,7 +2,6 @@ require 'active_record'
 require 'database_cleaner/spec/database_helper'
 
 class ActiveRecordHelper < DatabaseCleaner::Spec::DatabaseHelper
-  # remove when database_cleaner is 2.0
   def self.with_all_dbs &block
     %w[mysql2 sqlite3 postgres].map(&:to_sym).each do |db|
       yield new(db)

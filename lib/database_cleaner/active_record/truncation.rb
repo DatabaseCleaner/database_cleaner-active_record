@@ -31,7 +31,7 @@ module DatabaseCleaner
       end
 
       def database_tables
-        ::ActiveRecord::VERSION::MAJOR >= 5 ? data_sources : tables
+        tables
       end
 
       def truncate_table(table_name)
@@ -143,6 +143,10 @@ module DatabaseCleaner
 
       def restart_identity
         @restart_identity ||= db_version >=  80400 ? 'RESTART IDENTITY' : ''
+      end
+
+      def database_tables
+        tables_with_schema
       end
 
       def truncate_table(table_name)

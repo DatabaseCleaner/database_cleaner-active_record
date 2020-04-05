@@ -9,7 +9,7 @@ class FakeModel
 end
 
 RSpec.describe DatabaseCleaner::ActiveRecord do
-  it { is_expected.to respond_to(:available_strategies) }
+  it_behaves_like "a database_cleaner adapter"
 
   it "has a default_strategy of transaction" do
     expect(described_class.default_strategy).to eq(:transaction)
@@ -46,7 +46,7 @@ module DatabaseCleaner
         DatabaseCleaner::ActiveRecord.config_file_location = nil
       end
 
-      it_should_behave_like "a generic strategy"
+      it_behaves_like 'a database_cleaner strategy'
 
       describe "db" do
         it "should store my desired db" do

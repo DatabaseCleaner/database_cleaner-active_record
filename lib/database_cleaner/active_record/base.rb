@@ -6,11 +6,11 @@ require 'yaml'
 module DatabaseCleaner
   module ActiveRecord
     def self.available_strategies
-      %w[truncation transaction deletion]
+      %i[transaction truncation deletion]
     end
 
     def self.default_strategy
-      :transaction
+      available_strategies.first
     end
 
     def self.config_file_location=(path)
@@ -25,6 +25,14 @@ module DatabaseCleaner
       include ::DatabaseCleaner::Generic::Base
 
       attr_accessor :connection_hash
+
+      def start
+        # NO-OP
+      end
+
+      def clean
+        raise NotImplementedError
+      end
 
       def db=(desired_db)
         @db = desired_db
@@ -55,7 +63,7 @@ module DatabaseCleaner
         @connection_class ||= if db && !db.is_a?(Symbol)
                                 db
                               elsif connection_hash
-                                lookup_from_connection_pool || establish_connection
+                                lookup_from_connection_pool rescue nil || establish_connection
                               else
                                 ::ActiveRecord::Base
                               end

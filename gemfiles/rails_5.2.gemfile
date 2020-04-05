@@ -2,10 +2,8 @@
 
 source "https://rubygems.org"
 
-git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
-
 gem "byebug"
 gem "rails", "~>5.2.0"
-gem "database_cleaner-core", branch: "master", github: "DatabaseCleaner/database_cleaner"
+gem "database_cleaner-core", branch: "master", git: "https://github.com/DatabaseCleaner/database_cleaner"
 
 gemspec path: "../"

@@ -2,8 +2,13 @@
 
 source "https://rubygems.org"
 
-gem "byebug"
+gem "database_cleaner-core", git: "https://github.com/DatabaseCleaner/database_cleaner"
 gem "rails", "~>6.0.0"
-gem "database_cleaner-core", branch: "master", git: "https://github.com/DatabaseCleaner/database_cleaner"
+gem "byebug"
+
+group :test do
+  gem "simplecov", require: false
+  gem "codecov", require: false
+end
 
 gemspec path: "../"

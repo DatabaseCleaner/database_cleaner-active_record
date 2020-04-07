@@ -12,4 +12,5 @@ gemfile:
   - gemfiles/rails_6.0.gemfile
 before_install:
   - bin/setup
-
+cache:
+  bundler: true

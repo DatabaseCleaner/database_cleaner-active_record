@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/DatabaseCleaner/database_cleaner-active_record.svg?branch=master)](https://travis-ci.org/DatabaseCleaner/database_cleaner-active_record)
 [![Code Climate](https://codeclimate.com/github/DatabaseCleaner/database_cleaner-active_record/badges/gpa.svg)](https://codeclimate.com/github/DatabaseCleaner/database_cleaner-active_record)
+[![codecov](https://codecov.io/gh/DatabaseCleaner/database_cleaner-active_record/branch/master/graph/badge.svg)](https://codecov.io/gh/DatabaseCleaner/database_cleaner-active_record)
 
 Clean your ActiveRecord databases with Database Cleaner.
 

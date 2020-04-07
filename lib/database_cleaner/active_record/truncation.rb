@@ -38,7 +38,8 @@ module DatabaseCleaner
         raise NotImplementedError
       end
 
-      def truncate_tables(tables)
+      def truncate_tables(*tables)
+        tables.flatten!
         tables.each do |table_name|
           self.truncate_table(table_name)
         end
@@ -50,13 +51,14 @@ module DatabaseCleaner
         execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
       end
 
-      def truncate_tables(tables)
+      def truncate_tables(*tables)
+        tables.flatten!
         tables.each { |t| truncate_table(t) }
       end
 
       def pre_count_truncate_tables(tables, options = {:reset_ids => true})
         filter = options[:reset_ids] ? method(:has_been_used?) : method(:has_rows?)
-        truncate_tables(tables.select(&filter))
+        truncate_tables(*tables.select(&filter))
       end
 
       private
@@ -104,7 +106,8 @@ module DatabaseCleaner
       end
       alias truncate_table delete_table
 
-      def truncate_tables(tables)
+      def truncate_tables(*tables)
+        tables.flatten!
         tables.each { |t| truncate_table(t) }
       end
 
@@ -153,14 +156,15 @@ module DatabaseCleaner
         truncate_tables([table_name])
       end
 
-      def truncate_tables(table_names)
+      def truncate_tables(*table_names)
+        tables.flatten!
         return if table_names.nil? || table_names.empty?
         execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} #{restart_identity} #{cascade};")
       end
 
       def pre_count_truncate_tables(tables, options = {:reset_ids => true})
         filter = options[:reset_ids] ? method(:has_been_used?) : method(:has_rows?)
-        truncate_tables(tables.select(&filter))
+        truncate_tables(*tables.select(&filter))
       end
 
       def database_cleaner_table_cache
@@ -243,7 +247,7 @@ module DatabaseCleaner::ActiveRecord
         if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
           connection.pre_count_truncate_tables(tables_to_truncate(connection), {:reset_ids => reset_ids?})
         else
-          connection.truncate_tables(tables_to_truncate(connection))
+          connection.truncate_tables(*tables_to_truncate(connection))
         end
       end
     end

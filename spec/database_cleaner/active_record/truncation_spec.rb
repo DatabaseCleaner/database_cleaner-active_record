@@ -98,8 +98,8 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
 
           it "only truncates non-empty tables" do
             tables = case helper.db
-              when :mysql2 then ['users']
-              when :postgres then ['public.users']
+              when :mysql2 then 'users'
+              when :postgres then 'public.users'
               when :sqlite3 then pending
               end
 

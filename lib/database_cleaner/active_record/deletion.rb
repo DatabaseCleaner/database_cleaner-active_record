@@ -1,6 +1,5 @@
 require 'active_record'
 require 'active_record/connection_adapters/abstract_adapter'
-require "database_cleaner/generic/truncation"
 require 'database_cleaner/active_record/truncation'
 
 module DatabaseCleaner

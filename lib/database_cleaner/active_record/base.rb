@@ -1,5 +1,5 @@
 require 'active_record'
-require 'database_cleaner/generic/base'
+require 'database_cleaner/strategy'
 require 'erb'
 require 'yaml'
 
@@ -21,54 +21,7 @@ module DatabaseCleaner
       @config_file_location ||= "#{Dir.pwd}/config/database.yml"
     end
 
-    module Base
-      include DatabaseCleaner::Generic::Base
-
-      attr_accessor :connection_hash
-
-      def start
-        # NO-OP
-      end
-
-      def clean
-        raise NotImplementedError
-      end
-
-      def db=(desired_db)
-        @db = desired_db
-        load_config
-      end
-
-      def db
-        @db ||= super
-      end
-
-      def load_config
-        if self.db != :default && self.db.is_a?(Symbol) && File.file?(DatabaseCleaner::ActiveRecord.config_file_location)
-          connection_details = YAML::load(ERB.new(IO.read(DatabaseCleaner::ActiveRecord.config_file_location)).result)
-          @connection_hash   = valid_config(connection_details)[self.db.to_s]
-        end
-      end
-
-      def valid_config(connection_file)
-        if !::ActiveRecord::Base.configurations.nil? && !::ActiveRecord::Base.configurations.empty?
-          if connection_file != ::ActiveRecord::Base.configurations
-            return ::ActiveRecord::Base.configurations
-          end
-        end
-        connection_file
-      end
-
-      def connection_class
-        @connection_class ||= if db && !db.is_a?(Symbol)
-                                db
-                              elsif connection_hash
-                                lookup_from_connection_pool rescue nil || establish_connection
-                              else
-                                ::ActiveRecord::Base
-                              end
-      end
-
+    class Base < DatabaseCleaner::Strategy
       def self.migration_table_name
         if ::ActiveRecord::VERSION::MAJOR < 5
           ::ActiveRecord::Migrator.schema_migrations_table_name
@@ -85,7 +38,40 @@ module DatabaseCleaner
         result
       end
 
+      def db=(*)
+        super
+        load_config
+      end
+
+      attr_accessor :connection_hash
+
+      def connection_class
+        @connection_class ||= if db && !db.is_a?(Symbol)
+                                db
+                              elsif connection_hash
+                                (lookup_from_connection_pool rescue nil) || establish_connection
+                              else
+                                ::ActiveRecord::Base
+                              end
+      end
+
       private
+
+      def load_config
+        if self.db != :default && self.db.is_a?(Symbol) && File.file?(DatabaseCleaner::ActiveRecord.config_file_location)
+          connection_details = YAML::load(ERB.new(IO.read(DatabaseCleaner::ActiveRecord.config_file_location)).result)
+          @connection_hash   = valid_config(connection_details)[self.db.to_s]
+        end
+      end
+
+      def valid_config(connection_file)
+        if !::ActiveRecord::Base.configurations.nil? && !::ActiveRecord::Base.configurations.empty?
+          if connection_file != ::ActiveRecord::Base.configurations
+            return ::ActiveRecord::Base.configurations
+          end
+        end
+        connection_file
+      end
 
       def lookup_from_connection_pool
         if ::ActiveRecord::Base.respond_to?(:descendants)

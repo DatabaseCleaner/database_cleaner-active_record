@@ -1,12 +1,8 @@
 require 'database_cleaner/active_record/base'
-require 'database_cleaner/generic/transaction'
 
 module DatabaseCleaner
   module ActiveRecord
-    class Transaction
-      include DatabaseCleaner::ActiveRecord::Base
-      include DatabaseCleaner::Generic::Transaction
-
+    class Transaction < Base
       def start
         # Hack to make sure that the connection is properly setup for
         # the clean code.

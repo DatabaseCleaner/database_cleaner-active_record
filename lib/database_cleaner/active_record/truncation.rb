@@ -1,5 +1,4 @@
 require 'active_record/base'
-require 'database_cleaner/active_record/base'
 require 'active_record/connection_adapters/abstract_adapter'
 
 #Load available connection adapters
@@ -12,7 +11,6 @@ require 'active_record/connection_adapters/abstract_adapter'
   end
 end
 
-require "database_cleaner/generic/truncation"
 require 'database_cleaner/active_record/base'
 
 module DatabaseCleaner
@@ -230,9 +228,22 @@ ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include Dat
 
 module DatabaseCleaner
   module ActiveRecord
-    class Truncation
-      include DatabaseCleaner::ActiveRecord::Base
-      include DatabaseCleaner::Generic::Truncation
+    class Truncation < Base
+      def initialize(opts={})
+        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :reset_ids, :cache_tables]).empty?
+          raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids or :cache_tables. You specified #{opts.keys.join(',')}."
+        end
+        if opts.has_key?(:only) && opts.has_key?(:except)
+          raise ArgumentError, "You may only specify either :only or :except.  Doing both doesn't really make sense does it?"
+        end
+
+        @only = opts[:only]
+        @tables_to_exclude = Array( (opts[:except] || []).dup ).flatten
+        @tables_to_exclude += migration_storage_names
+        @pre_count = opts[:pre_count]
+        @reset_ids = opts[:reset_ids]
+        @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
+      end
 
       def clean
         connection = connection_class.connection
@@ -259,7 +270,6 @@ module DatabaseCleaner
         end
       end
 
-      # overwritten
       def migration_storage_names
         result = [DatabaseCleaner::ActiveRecord::Base.migration_table_name]
         result << ::ActiveRecord::Base.internal_metadata_table_name if ::ActiveRecord::VERSION::MAJOR >= 5

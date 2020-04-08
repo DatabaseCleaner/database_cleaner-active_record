@@ -25,9 +25,7 @@ end
 
 module DatabaseCleaner
   module ActiveRecord
-    class ExampleStrategy
-      include DatabaseCleaner::ActiveRecord::Base
-    end
+    class ExampleStrategy < DatabaseCleaner::ActiveRecord::Base; end
 
     RSpec.describe ExampleStrategy do
       subject(:strategy) { described_class.new }

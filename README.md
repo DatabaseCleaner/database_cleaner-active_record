@@ -78,7 +78,6 @@ If you are using ActiveRecord then take a look at the [additional options](#addi
 The following options are available for ActiveRecord's `:truncation` strategy _only_ for MySQL and Postgres.
 
 * `:pre_count` - When set to `true` this will check each table for existing rows before truncating it.  This can speed up test suites when many of the tables to be truncated are never populated. Defaults to `:false`. (Also, see the section on [What strategy is fastest?](#what-strategy-is-fastest))
-* `:reset_ids` - This only matters when `:pre_count` is used, and it will make sure that a tables auto-incrementing id is reset even if there are no rows in the table (e.g. records were created in the test but also removed before DatabaseCleaner gets to it). Defaults to `true`.
 
 The following option is available for ActiveRecord's `:truncation` and `:deletion` strategy for any DB.
 

@@ -47,12 +47,6 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
             expect(User.create.id).to eq 1
           end
 
-          xit "should not reset AUTO_INCREMENT index of table if :reset_ids is false" do
-            strategy = described_class.new(reset_ids: false)
-            strategy.clean
-            expect(User.create.id).to eq 3
-          end
-
           it "should truncate all tables except for schema_migrations" do
             strategy.clean
             count = connection.select_value("select count(*) from schema_migrations;").to_i

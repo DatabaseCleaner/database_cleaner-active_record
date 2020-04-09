@@ -54,9 +54,8 @@ module DatabaseCleaner
           tables.each { |t| truncate_table(t) }
         end
 
-        def pre_count_truncate_tables(tables, options = {:reset_ids => true})
-          filter = options[:reset_ids] ? method(:has_been_used?) : method(:has_rows?)
-          truncate_tables(tables.select(&filter))
+        def pre_count_truncate_tables(tables)
+          truncate_tables(tables.select { |table| has_been_used?(table) })
         end
 
         private
@@ -158,9 +157,8 @@ module DatabaseCleaner
           execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} #{restart_identity} #{cascade};")
         end
 
-        def pre_count_truncate_tables(tables, options = {:reset_ids => true})
-          filter = options[:reset_ids] ? method(:has_been_used?) : method(:has_rows?)
-          truncate_tables(tables.select(&filter))
+        def pre_count_truncate_tables(tables)
+          truncate_tables(tables.select { |table| has_been_used?(table) })
         end
 
         def database_cleaner_table_cache
@@ -240,7 +238,7 @@ module DatabaseCleaner
         connection = connection_class.connection
         connection.disable_referential_integrity do
           if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
-            connection.pre_count_truncate_tables(tables_to_truncate(connection), {:reset_ids => reset_ids?})
+            connection.pre_count_truncate_tables(tables_to_truncate(connection))
           else
             connection.truncate_tables(tables_to_truncate(connection))
           end
@@ -274,10 +272,6 @@ module DatabaseCleaner
 
       def pre_count?
         @pre_count == true
-      end
-
-      def reset_ids?
-        @reset_ids != false
       end
     end
   end

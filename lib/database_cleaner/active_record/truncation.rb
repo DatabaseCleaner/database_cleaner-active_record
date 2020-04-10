@@ -234,13 +234,10 @@ module DatabaseCleaner
         if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :reset_ids, :cache_tables]).empty?
           raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids or :cache_tables. You specified #{opts.keys.join(',')}."
         end
-        if opts.has_key?(:only) && opts.has_key?(:except)
-          raise ArgumentError, "You may only specify either :only or :except.  Doing both doesn't really make sense does it?"
-        end
 
-        @only = opts[:only]
-        @tables_to_exclude = Array( (opts[:except] || []).dup ).flatten
-        @tables_to_exclude += migration_storage_names
+        @only = Array(opts[:only]).dup
+        @except = Array(opts[:except]).dup
+
         @pre_count = opts[:pre_count]
         @reset_ids = opts[:reset_ids]
         @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
@@ -261,14 +258,13 @@ module DatabaseCleaner
 
       def tables_to_truncate(connection)
         tables_in_db = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
-        to_reject = (@tables_to_exclude + connection.database_cleaner_view_cache)
-        (@only || tables_in_db).reject do |table|
-          if ( m = table.match(/([^.]+)$/) )
-            to_reject.include?(m[1])
-          else
-            false
-          end
+        all_tables = tables_in_db.map do |table|
+          table[/[^.]+$/]
+        end.compact
+        if @only.none?
+          @except += connection.database_cleaner_view_cache + migration_storage_names
         end
+        tables_to_clean(all_tables, only: @only, except: @except)
       end
 
       def migration_storage_names

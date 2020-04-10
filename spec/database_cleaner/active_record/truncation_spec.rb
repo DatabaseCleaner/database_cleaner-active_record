@@ -69,7 +69,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
 
           it "should raise an error when :only and :except options are used" do
             expect {
-              described_class.new(except: ['widgets'], only: ['widgets'])
+              described_class.new(except: ['widgets'], only: ['widgets']).clean
             }.to raise_error(ArgumentError)
           end
 

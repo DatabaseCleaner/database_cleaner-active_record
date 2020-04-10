@@ -23,19 +23,21 @@ module DatabaseCleaner
         end
       end
     end
+    private_constant :ConnectionAdapters
+
+    ::ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval { include ConnectionAdapters::AbstractDeleteAdapter }
+    ::ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::JdbcAdapter)
+    ::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
+    ::ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::Mysql2Adapter)
+    ::ActiveRecord::ConnectionAdapters::SQLiteAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLiteAdapter)
+    ::ActiveRecord::ConnectionAdapters::SQLite3Adapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLite3Adapter)
+    ::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
+    ::ActiveRecord::ConnectionAdapters::IBM_DBAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::IBM_DBAdapter)
+    ::ActiveRecord::ConnectionAdapters::SQLServerAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLServerAdapter)
+    ::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include ConnectionAdapters::OracleDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter)
   end
 end
 
-ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::AbstractDeleteAdapter }
-ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::GenericDeleteAdapter } if defined?(ActiveRecord::ConnectionAdapters::JdbcAdapter)
-ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::GenericDeleteAdapter } if defined?(ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
-ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::GenericDeleteAdapter } if defined?(ActiveRecord::ConnectionAdapters::Mysql2Adapter)
-ActiveRecord::ConnectionAdapters::SQLiteAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::GenericDeleteAdapter } if defined?(ActiveRecord::ConnectionAdapters::SQLiteAdapter)
-ActiveRecord::ConnectionAdapters::SQLite3Adapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::GenericDeleteAdapter } if defined?(ActiveRecord::ConnectionAdapters::SQLite3Adapter)
-ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::GenericDeleteAdapter } if defined?(ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
-ActiveRecord::ConnectionAdapters::IBM_DBAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::GenericDeleteAdapter } if defined?(ActiveRecord::ConnectionAdapters::IBM_DBAdapter)
-ActiveRecord::ConnectionAdapters::SQLServerAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::GenericDeleteAdapter } if defined?(ActiveRecord::ConnectionAdapters::SQLServerAdapter)
-ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::OracleDeleteAdapter } if defined?(ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter)
 
 module DatabaseCleaner
   module ActiveRecord
@@ -87,6 +89,7 @@ module DatabaseCleaner
           end
       end
     end
+    private_constant :SelectiveTruncation
 
     class Deletion < Truncation
       if defined?(ActiveRecord::ConnectionAdapters::Mysql2Adapter)

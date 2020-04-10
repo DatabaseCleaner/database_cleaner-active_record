@@ -202,29 +202,30 @@ module DatabaseCleaner
         end
       end
     end
+    private_constant :ConnectionAdapters
+
+    #Apply adapter decoraters where applicable (adapter should be loaded)
+    ::ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval { include ConnectionAdapters::AbstractAdapter }
+
+    if defined?(::ActiveRecord::ConnectionAdapters::JdbcAdapter)
+      if defined?(::ActiveRecord::ConnectionAdapters::OracleJdbcConnection)
+        ::ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include ConnectionAdapters::OracleAdapter }
+      else
+        ::ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include ConnectionAdapters::TruncateOrDelete }
+      end
+    end
+
+    ::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
+    ::ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::Mysql2Adapter)
+    ::ActiveRecord::ConnectionAdapters::MysqlAdapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::MysqlAdapter)
+    ::ActiveRecord::ConnectionAdapters::SQLiteAdapter.class_eval { include ConnectionAdapters::SQLiteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLiteAdapter)
+    ::ActiveRecord::ConnectionAdapters::SQLite3Adapter.class_eval { include ConnectionAdapters::SQLiteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLite3Adapter)
+    ::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval { include ConnectionAdapters::PostgreSQLAdapter } if defined?(::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
+    ::ActiveRecord::ConnectionAdapters::IBM_DBAdapter.class_eval { include ConnectionAdapters::IBM_DBAdapter } if defined?(::ActiveRecord::ConnectionAdapters::IBM_DBAdapter)
+    ::ActiveRecord::ConnectionAdapters::SQLServerAdapter.class_eval { include ConnectionAdapters::TruncateOrDelete } if defined?(::ActiveRecord::ConnectionAdapters::SQLServerAdapter)
+    ::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include ConnectionAdapters::OracleAdapter } if defined?(::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter)
   end
 end
-
-#Apply adapter decoraters where applicable (adapter should be loaded)
-ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::AbstractAdapter }
-
-if defined?(ActiveRecord::ConnectionAdapters::JdbcAdapter)
-  if defined?(ActiveRecord::ConnectionAdapters::OracleJdbcConnection)
-    ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::OracleAdapter }
-  else
-    ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::TruncateOrDelete }
-  end
-end
-
-ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter } if defined?(ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
-ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter } if defined?(ActiveRecord::ConnectionAdapters::Mysql2Adapter)
-ActiveRecord::ConnectionAdapters::MysqlAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter } if defined?(ActiveRecord::ConnectionAdapters::MysqlAdapter)
-ActiveRecord::ConnectionAdapters::SQLiteAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::SQLiteAdapter } if defined?(ActiveRecord::ConnectionAdapters::SQLiteAdapter)
-ActiveRecord::ConnectionAdapters::SQLite3Adapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::SQLiteAdapter } if defined?(ActiveRecord::ConnectionAdapters::SQLite3Adapter)
-ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter } if defined?(ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
-ActiveRecord::ConnectionAdapters::IBM_DBAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::IBM_DBAdapter } if defined?(ActiveRecord::ConnectionAdapters::IBM_DBAdapter)
-ActiveRecord::ConnectionAdapters::SQLServerAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::TruncateOrDelete } if defined?(ActiveRecord::ConnectionAdapters::SQLServerAdapter)
-ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::OracleAdapter } if defined?(ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter)
 
 module DatabaseCleaner
   module ActiveRecord

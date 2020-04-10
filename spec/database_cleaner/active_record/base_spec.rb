@@ -4,9 +4,7 @@ require 'database_cleaner/spec'
 
 module DatabaseCleaner
   module ActiveRecord
-    class ExampleStrategy < DatabaseCleaner::ActiveRecord::Base; end
-
-    RSpec.describe ExampleStrategy do
+    RSpec.describe Base do
       subject(:strategy) { described_class.new }
 
       let(:config_location) { '/path/to/config/database.yml' }

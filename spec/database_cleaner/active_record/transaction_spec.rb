@@ -4,7 +4,7 @@ require 'database_cleaner/active_record/transaction'
 RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
   subject(:strategy) { described_class.new }
 
-  DatabaseCleaner::ActiveRecord::DatabaseHelper.with_all_dbs do |helper|
+  DatabaseHelper.with_all_dbs do |helper|
     context "using a #{helper.db} connection" do
       around do |example|
         helper.setup

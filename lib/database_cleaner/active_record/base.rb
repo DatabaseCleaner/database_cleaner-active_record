@@ -5,14 +5,6 @@ require 'yaml'
 
 module DatabaseCleaner
   module ActiveRecord
-    def self.available_strategies
-      %i[transaction truncation deletion]
-    end
-
-    def self.default_strategy
-      available_strategies.first
-    end
-
     def self.config_file_location=(path)
       @config_file_location = path
     end

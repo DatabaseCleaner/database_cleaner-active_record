@@ -91,15 +91,11 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           subject(:strategy) { described_class.new(pre_count: true) }
 
           it "only truncates non-empty tables" do
-            tables = case helper.db
-              when :mysql2 then ['users']
-              when :postgres then ['public.users']
-              when :sqlite3 then pending
-              end
+            pending if helper.db == :sqlite3
 
             User.create!
 
-            expect(connection).to receive(:truncate_tables).with(tables)
+            expect(connection).to receive(:truncate_tables).with(['users'])
             strategy.clean
           end
         end

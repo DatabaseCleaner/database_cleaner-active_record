@@ -22,7 +22,7 @@ module DatabaseCleaner
     end
 
     module Base
-      include ::DatabaseCleaner::Generic::Base
+      include DatabaseCleaner::Generic::Base
 
       attr_accessor :connection_hash
 
@@ -44,8 +44,8 @@ module DatabaseCleaner
       end
 
       def load_config
-        if self.db != :default && self.db.is_a?(Symbol) && File.file?(ActiveRecord.config_file_location)
-          connection_details = YAML::load(ERB.new(IO.read(ActiveRecord.config_file_location)).result)
+        if self.db != :default && self.db.is_a?(Symbol) && File.file?(DatabaseCleaner::ActiveRecord.config_file_location)
+          connection_details = YAML::load(ERB.new(IO.read(DatabaseCleaner::ActiveRecord.config_file_location)).result)
           @connection_hash   = valid_config(connection_details)[self.db.to_s]
         end
       end
@@ -78,7 +78,7 @@ module DatabaseCleaner
       end
 
       def self.exclusion_condition(column_name)
-        result = " #{column_name} <> '#{::DatabaseCleaner::ActiveRecord::Base.migration_table_name}' "
+        result = " #{column_name} <> '#{DatabaseCleaner::ActiveRecord::Base.migration_table_name}' "
         if ::ActiveRecord::VERSION::MAJOR >= 5
           result += " AND #{column_name} <> '#{::ActiveRecord::Base.internal_metadata_table_name}' "
         end

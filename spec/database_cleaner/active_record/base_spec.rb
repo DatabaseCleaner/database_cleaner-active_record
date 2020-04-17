@@ -2,12 +2,6 @@ require 'active_record'
 require 'database_cleaner/active_record/base'
 require 'database_cleaner/spec'
 
-class FakeModel
-  def self.connection
-    :fake_connection
-  end
-end
-
 RSpec.describe DatabaseCleaner::ActiveRecord do
   it_behaves_like "a database_cleaner adapter"
 
@@ -123,7 +117,7 @@ module DatabaseCleaner
         end
 
         it "skips the file when the model is set" do
-          strategy.db = FakeModel
+          strategy.db = double(:model_class)
           expect(strategy.connection_hash).not_to be
         end
 
@@ -140,18 +134,20 @@ module DatabaseCleaner
         end
 
         context "with database models" do
+          let(:model_class) { double }
+
           context "connection_hash is set" do
             it "reuses the model's connection" do
               strategy.connection_hash = {}
-              strategy.db = FakeModel
-              expect(strategy.connection_class).to eq FakeModel
+              strategy.db = model_class
+              expect(strategy.connection_class).to eq model_class
             end
           end
 
           context "connection_hash is not set" do
             it "reuses the model's connection" do
-              strategy.db = FakeModel
-              expect(strategy.connection_class).to eq FakeModel
+              strategy.db = model_class
+              expect(strategy.connection_class).to eq model_class
             end
           end
         end

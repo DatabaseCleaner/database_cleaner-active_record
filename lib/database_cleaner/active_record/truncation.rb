@@ -160,6 +160,7 @@ module DatabaseCleaner
         return if table_names.nil? || table_names.empty?
         execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} #{restart_identity} #{cascade};")
       end
+          table_names.flatten!
 
       def pre_count_truncate_tables(tables, options = {:reset_ids => true})
         filter = options[:reset_ids] ? method(:has_been_used?) : method(:has_rows?)

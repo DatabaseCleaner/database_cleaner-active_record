@@ -67,12 +67,6 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
               .to([2,0])
           end
 
-          it "should raise an error when :only and :except options are used" do
-            expect {
-              described_class.new(except: ['widgets'], only: ['widgets']).clean
-            }.to raise_error(ArgumentError)
-          end
-
           it "should raise an error when invalid options are provided" do
             expect { described_class.new(foo: 'bar') }.to raise_error(ArgumentError)
           end

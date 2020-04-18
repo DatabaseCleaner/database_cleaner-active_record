@@ -257,14 +257,12 @@ module DatabaseCleaner
       private
 
       def tables_to_truncate(connection)
-        tables_in_db = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
-        all_tables = tables_in_db.map do |table|
-          table[/[^.]+$/]
-        end.compact
         if @only.none?
-          @except += connection.database_cleaner_view_cache + migration_storage_names
+          all_tables = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
+          @only = all_tables.map { |table| table.split(".").last }
         end
-        tables_to_clean(all_tables, only: @only, except: @except)
+        @except += connection.database_cleaner_view_cache + migration_storage_names
+        @only - @except
       end
 
       def migration_storage_names

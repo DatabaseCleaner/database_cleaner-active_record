@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-gem "database_cleaner-core", git: "https://github.com/DatabaseCleaner/database_cleaner", branch: "new_adapter_api"
+gem "database_cleaner-core", git: "https://github.com/DatabaseCleaner/database_cleaner"
 gem "rails", "~>6.0.0"
 gem "byebug"
 

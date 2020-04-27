@@ -1,5 +1,4 @@
 require 'active_record/base'
-require 'database_cleaner/active_record/base'
 require 'active_record/connection_adapters/abstract_adapter'
 
 #Load available connection adapters
@@ -12,7 +11,6 @@ require 'active_record/connection_adapters/abstract_adapter'
   end
 end
 
-require "database_cleaner/generic/truncation"
 require 'database_cleaner/active_record/base'
 
 module DatabaseCleaner
@@ -56,9 +54,8 @@ module DatabaseCleaner
           tables.each { |t| truncate_table(t) }
         end
 
-        def pre_count_truncate_tables(tables, options = {:reset_ids => true})
-          filter = options[:reset_ids] ? method(:has_been_used?) : method(:has_rows?)
-          truncate_tables(*tables.select(&filter))
+        def pre_count_truncate_tables(tables)
+          truncate_tables(*tables.select { |table| has_been_used?(table) })
         end
 
         private
@@ -162,9 +159,8 @@ module DatabaseCleaner
           execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} #{restart_identity} #{cascade};")
         end
 
-        def pre_count_truncate_tables(tables, options = {:reset_ids => true})
-          filter = options[:reset_ids] ? method(:has_been_used?) : method(:has_rows?)
-          truncate_tables(*tables.select(&filter))
+        def pre_count_truncate_tables(tables)
+          truncate_tables(*tables.select { |table| has_been_used?(table) })
         end
 
         def database_cleaner_table_cache
@@ -210,41 +206,52 @@ module DatabaseCleaner
         end
       end
     end
+    private_constant :ConnectionAdapters
+
+    #Apply adapter decoraters where applicable (adapter should be loaded)
+    ::ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval { include ConnectionAdapters::AbstractAdapter }
+
+    if defined?(::ActiveRecord::ConnectionAdapters::JdbcAdapter)
+      if defined?(::ActiveRecord::ConnectionAdapters::OracleJdbcConnection)
+        ::ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include ConnectionAdapters::OracleAdapter }
+      else
+        ::ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include ConnectionAdapters::TruncateOrDelete }
+      end
+    end
+
+    ::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
+    ::ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::Mysql2Adapter)
+    ::ActiveRecord::ConnectionAdapters::MysqlAdapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::MysqlAdapter)
+    ::ActiveRecord::ConnectionAdapters::SQLiteAdapter.class_eval { include ConnectionAdapters::SQLiteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLiteAdapter)
+    ::ActiveRecord::ConnectionAdapters::SQLite3Adapter.class_eval { include ConnectionAdapters::SQLiteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLite3Adapter)
+    ::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval { include ConnectionAdapters::PostgreSQLAdapter } if defined?(::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
+    ::ActiveRecord::ConnectionAdapters::IBM_DBAdapter.class_eval { include ConnectionAdapters::IBM_DBAdapter } if defined?(::ActiveRecord::ConnectionAdapters::IBM_DBAdapter)
+    ::ActiveRecord::ConnectionAdapters::SQLServerAdapter.class_eval { include ConnectionAdapters::TruncateOrDelete } if defined?(::ActiveRecord::ConnectionAdapters::SQLServerAdapter)
+    ::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include ConnectionAdapters::OracleAdapter } if defined?(::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter)
   end
 end
-
-#Apply adapter decoraters where applicable (adapter should be loaded)
-ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::AbstractAdapter }
-
-if defined?(ActiveRecord::ConnectionAdapters::JdbcAdapter)
-  if defined?(ActiveRecord::ConnectionAdapters::OracleJdbcConnection)
-    ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::OracleAdapter }
-  else
-    ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::TruncateOrDelete }
-  end
-end
-
-ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter } if defined?(ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
-ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter } if defined?(ActiveRecord::ConnectionAdapters::Mysql2Adapter)
-ActiveRecord::ConnectionAdapters::MysqlAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter } if defined?(ActiveRecord::ConnectionAdapters::MysqlAdapter)
-ActiveRecord::ConnectionAdapters::SQLiteAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::SQLiteAdapter } if defined?(ActiveRecord::ConnectionAdapters::SQLiteAdapter)
-ActiveRecord::ConnectionAdapters::SQLite3Adapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::SQLiteAdapter } if defined?(ActiveRecord::ConnectionAdapters::SQLite3Adapter)
-ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter } if defined?(ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
-ActiveRecord::ConnectionAdapters::IBM_DBAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::IBM_DBAdapter } if defined?(ActiveRecord::ConnectionAdapters::IBM_DBAdapter)
-ActiveRecord::ConnectionAdapters::SQLServerAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::TruncateOrDelete } if defined?(ActiveRecord::ConnectionAdapters::SQLServerAdapter)
-ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include DatabaseCleaner::ActiveRecord::ConnectionAdapters::OracleAdapter } if defined?(ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter)
 
 module DatabaseCleaner
   module ActiveRecord
-    class Truncation
-      include DatabaseCleaner::ActiveRecord::Base
-      include DatabaseCleaner::Generic::Truncation
+    class Truncation < Base
+      def initialize(opts={})
+        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :reset_ids, :cache_tables]).empty?
+          raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids or :cache_tables. You specified #{opts.keys.join(',')}."
+        end
+
+        @only = Array(opts[:only]).dup
+        @except = Array(opts[:except]).dup
+
+        @pre_count = opts[:pre_count]
+        @reset_ids = opts[:reset_ids]
+        @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
+      end
 
       def clean
         connection = connection_class.connection
         connection.disable_referential_integrity do
           if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
-            connection.pre_count_truncate_tables(tables_to_truncate(connection), {:reset_ids => reset_ids?})
+            connection.pre_count_truncate_tables(tables_to_truncate(connection))
           else
             connection.truncate_tables(*tables_to_truncate(connection))
           end
@@ -254,18 +261,14 @@ module DatabaseCleaner
       private
 
       def tables_to_truncate(connection)
-        tables_in_db = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
-        to_reject = (@tables_to_exclude + connection.database_cleaner_view_cache)
-        (@only || tables_in_db).reject do |table|
-          if ( m = table.match(/([^.]+)$/) )
-            to_reject.include?(m[1])
-          else
-            false
-          end
+        if @only.none?
+          all_tables = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
+          @only = all_tables.map { |table| table.split(".").last }
         end
+        @except += connection.database_cleaner_view_cache + migration_storage_names
+        @only - @except
       end
 
-      # overwritten
       def migration_storage_names
         result = [DatabaseCleaner::ActiveRecord::Base.migration_table_name]
         result << ::ActiveRecord::Base.internal_metadata_table_name if ::ActiveRecord::VERSION::MAJOR >= 5
@@ -278,10 +281,6 @@ module DatabaseCleaner
 
       def pre_count?
         @pre_count == true
-      end
-
-      def reset_ids?
-        @reset_ids != false
       end
     end
   end

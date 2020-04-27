@@ -2,34 +2,9 @@ require 'active_record'
 require 'database_cleaner/active_record/base'
 require 'database_cleaner/spec'
 
-RSpec.describe DatabaseCleaner::ActiveRecord do
-  it_behaves_like "a database_cleaner adapter"
-
-  it "has a default_strategy of transaction" do
-    expect(described_class.default_strategy).to eq(:transaction)
-  end
-
-  describe "config_file_location" do
-    after do
-      # prevent global state leakage
-      DatabaseCleaner::ActiveRecord.config_file_location = nil
-    end
-
-    it "should default to \#{Dir.pwd}/config/database.yml" do
-      DatabaseCleaner::ActiveRecord.config_file_location = nil
-      expect(DatabaseCleaner::ActiveRecord.config_file_location).to \
-        eq "#{Dir.pwd}/config/database.yml"
-    end
-  end
-end
-
 module DatabaseCleaner
   module ActiveRecord
-    class ExampleStrategy
-      include DatabaseCleaner::ActiveRecord::Base
-    end
-
-    RSpec.describe ExampleStrategy do
+    RSpec.describe Base do
       subject(:strategy) { described_class.new }
 
       let(:config_location) { '/path/to/config/database.yml' }

@@ -89,7 +89,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
 
             User.create!
 
-            expect(connection).to receive(:truncate_tables).with(['users'])
+            expect(connection).to receive(:truncate_tables).with('users')
             strategy.clean
           end
         end

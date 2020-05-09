@@ -15,19 +15,14 @@ module DatabaseCleaner
 
     class Base < DatabaseCleaner::Strategy
       def self.migration_table_name
-        if ::ActiveRecord::VERSION::MAJOR < 5
-          ::ActiveRecord::Migrator.schema_migrations_table_name
-        else
-          ::ActiveRecord::SchemaMigration.table_name
-        end
+        ::ActiveRecord::SchemaMigration.table_name
       end
 
       def self.exclusion_condition(column_name)
-        result = " #{column_name} <> '#{DatabaseCleaner::ActiveRecord::Base.migration_table_name}' "
-        if ::ActiveRecord::VERSION::MAJOR >= 5
-          result += " AND #{column_name} <> '#{::ActiveRecord::Base.internal_metadata_table_name}' "
-        end
-        result
+        <<~SQL
+          #{column_name} <> '#{DatabaseCleaner::ActiveRecord::Base.migration_table_name}'
+            AND #{column_name} <> '#{::ActiveRecord::Base.internal_metadata_table_name}'
+        SQL
       end
 
       def db=(*)

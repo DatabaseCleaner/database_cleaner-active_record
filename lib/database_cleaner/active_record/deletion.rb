@@ -38,13 +38,24 @@ module DatabaseCleaner
   end
 end
 
-
 module DatabaseCleaner
   module ActiveRecord
-    module SelectiveTruncation
+    class Deletion < Truncation
+      def clean
+        connection = connection_class.connection
+        connection.disable_referential_integrity do
+          tables_to_truncate(connection).each do |table_name|
+            connection.delete_table table_name
+          end
+        end
+      end
+
+      private
+
       def tables_to_truncate(connection)
         if information_schema_exists?(connection)
-          (@only || tables_with_new_rows(connection)) - @tables_to_exclude
+          @except += connection.database_cleaner_view_cache + migration_storage_names
+          (@only.any? ? @only : tables_with_new_rows(connection)) - @except
         else
           super
         end
@@ -79,7 +90,7 @@ module DatabaseCleaner
       end
 
       def information_schema_exists? connection
-        return false unless connection.is_a? ActiveRecord::ConnectionAdapters::Mysql2Adapter
+        return false unless connection.is_a? ::ActiveRecord::ConnectionAdapters::Mysql2Adapter
         @information_schema_exists ||=
           begin
             connection.execute("SELECT 1 FROM information_schema.tables")
@@ -87,22 +98,6 @@ module DatabaseCleaner
           rescue
             false
           end
-      end
-    end
-    private_constant :SelectiveTruncation
-
-    class Deletion < Truncation
-      if defined?(ActiveRecord::ConnectionAdapters::Mysql2Adapter)
-        include SelectiveTruncation
-      end
-
-      def clean
-        connection = connection_class.connection
-        connection.disable_referential_integrity do
-          tables_to_truncate(connection).each do |table_name|
-            connection.delete_table table_name
-          end
-        end
       end
     end
   end

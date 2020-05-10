@@ -48,7 +48,7 @@ module DatabaseCleaner
           SELECT table_name
           FROM information_schema.tables
           WHERE table_schema = database()
-          AND #{DatabaseCleaner::ActiveRecord::Base.exclusion_condition('table_name')};
+          AND #{self.class.exclusion_condition('table_name')};
         SQL
         queries = tables.map do |table|
           "(SELECT #{connection.quote(table)} FROM #{connection.quote_table_name(table)} LIMIT 1)"

@@ -84,7 +84,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
 
             User.create!
 
-            expect(connection).to receive(:delete_table).with('users')
+            expect(strategy).to receive(:delete_table).with(connection, 'users')
             strategy.clean
           end
         end

@@ -1,42 +1,5 @@
 require 'active_record'
-require 'active_record/connection_adapters/abstract_adapter'
 require 'database_cleaner/active_record/truncation'
-
-module DatabaseCleaner
-  module ActiveRecord
-    module ConnectionAdapters
-      module AbstractDeleteAdapter
-        def delete_table(table_name)
-          raise NotImplementedError
-        end
-      end
-
-      module GenericDeleteAdapter
-        def delete_table(table_name)
-          execute("DELETE FROM #{quote_table_name(table_name)};")
-        end
-      end
-
-      module OracleDeleteAdapter
-        def delete_table(table_name)
-          execute("DELETE FROM #{quote_table_name(table_name)}")
-        end
-      end
-    end
-    private_constant :ConnectionAdapters
-
-    ::ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval { include ConnectionAdapters::AbstractDeleteAdapter }
-    ::ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::JdbcAdapter)
-    ::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
-    ::ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::Mysql2Adapter)
-    ::ActiveRecord::ConnectionAdapters::SQLiteAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLiteAdapter)
-    ::ActiveRecord::ConnectionAdapters::SQLite3Adapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLite3Adapter)
-    ::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
-    ::ActiveRecord::ConnectionAdapters::IBM_DBAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::IBM_DBAdapter)
-    ::ActiveRecord::ConnectionAdapters::SQLServerAdapter.class_eval { include ConnectionAdapters::GenericDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLServerAdapter)
-    ::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include ConnectionAdapters::OracleDeleteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter)
-  end
-end
 
 module DatabaseCleaner
   module ActiveRecord
@@ -45,12 +8,16 @@ module DatabaseCleaner
         connection = connection_class.connection
         connection.disable_referential_integrity do
           tables_to_truncate(connection).each do |table_name|
-            connection.delete_table table_name
+            delete_table connection, table_name
           end
         end
       end
 
       private
+
+      def delete_table connection, table_name
+        connection.execute("DELETE FROM #{connection.quote_table_name(table_name)}")
+      end
 
       def tables_to_truncate(connection)
         if information_schema_exists?(connection)

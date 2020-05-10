@@ -79,8 +79,8 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
         describe "with pre_count optimization option" do
           subject(:strategy) { described_class.new(pre_count: true) }
 
-          xit "only delete from non-empty tables" do
-            pending if helper.db == :sqlite3
+          it "only delete from non-empty tables" do
+            pending unless helper.db == :mysql2
 
             User.create!
 
@@ -90,7 +90,9 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
         end
 
         context 'when :cache_tables is set to true' do
-          xit 'caches the list of tables to be deleted from' do
+          it 'caches the list of tables to be deleted from' do
+            pending unless helper.db == :sqlite3
+
             expect(connection).to receive(:database_cleaner_table_cache).and_return([])
             expect(connection).not_to receive(:tables)
 
@@ -100,7 +102,9 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
         end
 
         context 'when :cache_tables is set to false' do
-          xit 'does not cache the list of tables to be deleted from' do
+          it 'does not cache the list of tables to be deleted from' do
+            pending if helper.db == :mysql2
+
             expect(connection).not_to receive(:database_cleaner_table_cache)
             expect(connection).to receive(:database_tables).and_return([])
 

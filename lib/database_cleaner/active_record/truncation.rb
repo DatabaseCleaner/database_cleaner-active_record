@@ -59,9 +59,7 @@ module DatabaseCleaner
         private
 
         def row_count(table)
-          # Patch for MysqlAdapter with ActiveRecord 3.2.7 later
-          # select_value("SELECT 1") #=> "1"
-          select_value("SELECT EXISTS (SELECT 1 FROM #{quote_table_name(table)} LIMIT 1)").to_i
+          select_value("SELECT EXISTS (SELECT 1 FROM #{quote_table_name(table)} LIMIT 1)")
         end
 
         def auto_increment_value(table)
@@ -134,14 +132,6 @@ module DatabaseCleaner
           @db_version ||= postgresql_version
         end
 
-        def cascade
-          @cascade ||= db_version >=  80200 ? 'CASCADE' : ''
-        end
-
-        def restart_identity
-          @restart_identity ||= db_version >=  80400 ? 'RESTART IDENTITY' : ''
-        end
-
         def database_tables
           tables_with_schema
         end
@@ -152,7 +142,7 @@ module DatabaseCleaner
 
         def truncate_tables(table_names)
           return if table_names.nil? || table_names.empty?
-          execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} #{restart_identity} #{cascade};")
+          execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} RESTART IDENTITY CASCADE;")
         end
 
         def pre_count_truncate_tables(tables)
@@ -217,10 +207,9 @@ module DatabaseCleaner
 
     ::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
     ::ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::Mysql2Adapter)
-    ::ActiveRecord::ConnectionAdapters::MysqlAdapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::MysqlAdapter)
-    ::ActiveRecord::ConnectionAdapters::SQLiteAdapter.class_eval { include ConnectionAdapters::SQLiteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLiteAdapter)
     ::ActiveRecord::ConnectionAdapters::SQLite3Adapter.class_eval { include ConnectionAdapters::SQLiteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLite3Adapter)
     ::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval { include ConnectionAdapters::PostgreSQLAdapter } if defined?(::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
+
     ::ActiveRecord::ConnectionAdapters::IBM_DBAdapter.class_eval { include ConnectionAdapters::IBM_DBAdapter } if defined?(::ActiveRecord::ConnectionAdapters::IBM_DBAdapter)
     ::ActiveRecord::ConnectionAdapters::SQLServerAdapter.class_eval { include ConnectionAdapters::TruncateOrDelete } if defined?(::ActiveRecord::ConnectionAdapters::SQLServerAdapter)
     ::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include ConnectionAdapters::OracleAdapter } if defined?(::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter)

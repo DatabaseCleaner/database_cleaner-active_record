@@ -80,8 +80,6 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
           subject(:strategy) { described_class.new(pre_count: true) }
 
           it "only delete from non-empty tables" do
-            pending unless helper.db == :mysql2
-
             User.create!
 
             expect(strategy).to receive(:delete_table).with(connection, 'users')

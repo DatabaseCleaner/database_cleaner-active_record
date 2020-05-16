@@ -53,7 +53,18 @@ module DatabaseCleaner
         end
 
         def pre_count_truncate_tables(tables)
-          truncate_tables(tables.select { |table| has_been_used?(table) })
+          truncate_tables(pre_count_tables(tables))
+        end
+
+        def pre_count_tables(tables)
+          tables.select { |table| has_been_used?(table) }
+        end
+
+        def has_been_used?(table)
+          return has_rows?(table) unless has_sequence?(table)
+
+          cur_val = select_value("SELECT currval('#{table}_id_seq');").to_i rescue 0
+          cur_val > 0
         end
 
         private
@@ -93,7 +104,7 @@ module DatabaseCleaner
       module SQLiteAdapter
         def delete_table(table_name)
           execute("DELETE FROM #{quote_table_name(table_name)};")
-          if uses_sequence
+          if uses_sequence?
             execute("DELETE FROM sqlite_sequence where name = '#{table_name}';")
           end
         end
@@ -103,10 +114,37 @@ module DatabaseCleaner
           tables.each { |t| truncate_table(t) }
         end
 
+        def pre_count_truncate_tables(tables)
+          truncate_tables(pre_count_tables(tables))
+        end
+
+        def pre_count_tables(tables)
+          sequences = fetch_sequences
+          tables.select { |table| has_been_used?(table, sequences) }
+        end
+
         private
 
+        def fetch_sequences
+          if uses_sequence?
+            results = select_all("SELECT * FROM sqlite_sequence")
+            Hash[results.rows]
+          else
+            {}
+          end
+        end
+
+        def has_been_used?(table, sequences)
+          count = sequences.fetch(table) { row_count(table) }
+          count > 0
+        end
+
+        def row_count(table)
+          select_value("SELECT EXISTS (SELECT 1 FROM #{quote_table_name(table)} LIMIT 1)")
+        end
+
         # Returns a boolean indicating if the SQLite database is using the sqlite_sequence table.
-        def uses_sequence
+        def uses_sequence?
           select_value("SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence';")
         end
       end
@@ -146,7 +184,11 @@ module DatabaseCleaner
         end
 
         def pre_count_truncate_tables(tables)
-          truncate_tables(tables.select { |table| has_been_used?(table) })
+          truncate_tables(pre_count_tables(tables))
+        end
+
+        def pre_count_tables(tables)
+          tables.select { |table| has_been_used?(table) }
         end
 
         def database_cleaner_table_cache
@@ -235,8 +277,12 @@ module DatabaseCleaner
       def clean
         connection = connection_class.connection
         connection.disable_referential_integrity do
-          if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
-            connection.pre_count_truncate_tables(tables_to_truncate(connection))
+          if pre_count?
+            if connection.respond_to?(:pre_count_truncate_tables)
+              connection.pre_count_truncate_tables(tables_to_truncate(connection))
+            else
+              raise "DatabaseCleaner does not currently support the :pre_count option for the truncation strategy with #{connection.adapter_name}."
+            end
           else
             connection.truncate_tables(tables_to_truncate(connection))
           end

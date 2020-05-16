@@ -7,13 +7,21 @@ module DatabaseCleaner
       def clean
         connection = connection_class.connection
         connection.disable_referential_integrity do
-          tables_to_truncate(connection).each do |table_name|
-            delete_table connection, table_name
+          if pre_count? && connection.respond_to?(:pre_count_tables)
+            delete_tables(connection, connection.pre_count_tables(tables_to_truncate(connection)))
+          else
+            delete_tables(connection, tables_to_truncate(connection))
           end
         end
       end
 
       private
+
+      def delete_tables(connection, table_names)
+        table_names.each do |table_name|
+          delete_table(connection, table_name)
+        end
+      end
 
       def delete_table connection, table_name
         connection.execute("DELETE FROM #{connection.quote_table_name(table_name)}")

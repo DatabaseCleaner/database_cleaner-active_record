@@ -90,26 +90,36 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
         end
 
         context 'when :cache_tables is set to true' do
+          subject(:strategy) { described_class.new(cache_tables: true) }
+
           it 'caches the list of tables to be deleted from' do
-            pending unless helper.db == :sqlite3
+            if helper.db == :mysql2
+              expect(strategy).to receive(:build_table_stats_query).once.and_return("")
+            elsif helper.db == :postgres
+              expect(connection).to receive(:tables_with_schema).once.and_return([])
+            else
+              expect(connection).to receive(:database_tables).once.and_return([])
+            end
 
-            expect(connection).to receive(:database_cleaner_table_cache).and_return([])
-            expect(connection).not_to receive(:tables)
-
-            allow(connection).to receive(:truncate_tables)
-            described_class.new(cache_tables: true).clean
+            strategy.clean
+            strategy.clean
           end
         end
 
         context 'when :cache_tables is set to false' do
+          subject(:strategy) { described_class.new(cache_tables: false) }
+
           it 'does not cache the list of tables to be deleted from' do
-            pending if helper.db == :mysql2
+            if helper.db == :mysql2
+              expect(strategy).to receive(:build_table_stats_query).twice.and_return("")
+            elsif helper.db == :postgres
+              expect(connection).to receive(:tables_with_schema).twice.and_return([])
+            else
+              expect(connection).to receive(:database_tables).twice.and_return([])
+            end
 
-            expect(connection).not_to receive(:database_cleaner_table_cache)
-            expect(connection).to receive(:database_tables).and_return([])
-
-            allow(connection).to receive(:truncate_tables)
-            described_class.new(cache_tables: false).clean
+            strategy.clean
+            strategy.clean
           end
         end
       end

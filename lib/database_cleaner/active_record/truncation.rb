@@ -71,13 +71,6 @@ module DatabaseCleaner
         when "PostgreSQL"
           extend AbstractMysqlAdapter
           extend PostgreSQLAdapter
-
-        when "IBM_DB"
-          extend IBM_DBAdapter
-        when "Oracle", "OracleEnhanced"
-          extend OracleAdapter
-        when "SQLServer"
-          extend TruncateOrDelete
         end
         super(connection)
       end
@@ -98,16 +91,18 @@ module DatabaseCleaner
           tables
         end
 
+        def truncate_table(table_name)
+          execute("TRUNCATE TABLE #{quote_table_name(table_name)}")
+        rescue ::ActiveRecord::StatementInvalid
+          execute("DELETE FROM #{quote_table_name(table_name)}")
+        end
+
         def truncate_tables(tables)
           tables.each { |t| truncate_table(t) }
         end
       end
 
       module AbstractMysqlAdapter
-        def truncate_table(table_name)
-          execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
-        end
-
         def pre_count_truncate_tables(tables)
           truncate_tables(pre_count_tables(tables))
         end
@@ -145,13 +140,12 @@ module DatabaseCleaner
       end
 
       module SQLiteAdapter
-        def delete_table(table_name)
-          execute("DELETE FROM #{quote_table_name(table_name)};")
+        def truncate_table(table_name)
+          super
           if uses_sequence?
             execute("DELETE FROM sqlite_sequence where name = '#{table_name}';")
           end
         end
-        alias truncate_table delete_table
 
         def truncate_tables(tables)
           tables.each { |t| truncate_table(t) }
@@ -247,28 +241,6 @@ module DatabaseCleaner
               schemaname = ANY (current_schemas(false))
           _SQL
           rows.collect { |result| result.first }
-        end
-      end
-
-      module IBM_DBAdapter
-        def truncate_table(table_name)
-          execute("TRUNCATE #{quote_table_name(table_name)} IMMEDIATE")
-        end
-      end
-
-      module OracleAdapter
-        def truncate_table(table_name)
-          execute("TRUNCATE TABLE #{quote_table_name(table_name)}")
-        end
-      end
-
-      module TruncateOrDelete
-        def truncate_table(table_name)
-          begin
-            execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
-          rescue ::ActiveRecord::StatementInvalid
-            execute("DELETE FROM #{quote_table_name(table_name)};")
-          end
         end
       end
     end

@@ -6,15 +6,14 @@ module DatabaseCleaner
   module ActiveRecord
     class Truncation < Base
       def initialize(opts={})
-        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :reset_ids, :cache_tables]).empty?
-          raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids or :cache_tables. You specified #{opts.keys.join(',')}."
+        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :cache_tables]).empty?
+          raise ArgumentError, "The only valid options are :only, :except, :pre_count, and :cache_tables. You specified #{opts.keys.join(',')}."
         end
 
         @only = Array(opts[:only]).dup
         @except = Array(opts[:except]).dup
 
         @pre_count = opts[:pre_count]
-        @reset_ids = opts[:reset_ids]
         @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
       end
 

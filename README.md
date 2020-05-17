@@ -8,6 +8,8 @@ Clean your ActiveRecord databases with Database Cleaner.
 
 See https://github.com/DatabaseCleaner/database_cleaner for more information.
 
+For support or to discuss development please use the [Google Group](https://groups.google.com/group/database_cleaner).
+
 ## Installation
 
 ```ruby
@@ -19,26 +21,11 @@ end
 
 ## Supported Strategies
 
-Here is an overview of the supported strategies:
+Three strategies are supported:
 
-<table>
-  <tbody>
-    <tr>
-      <th>Truncation</th>
-      <th>Transaction</th>
-      <th>Deletion</th>
-    </tr>
-    <tr>
-      <td> Yes</td>
-      <td> <b>Yes</b></td>
-      <td> Yes</td>
-    </tr>
-  </tbody>
-</table>
-
-(Default strategy is denoted in bold)
-
-For support or to discuss development please use the [Google Group](https://groups.google.com/group/database_cleaner).
+* Transaction (default)
+* Truncation
+* Deletion
 
 ## What strategy is fastest?
 
@@ -54,31 +41,41 @@ So what is fastest out of `:deletion` and `:truncation`? Well, it depends on you
 
 Some people report much faster speeds with `:deletion` while others say `:truncation` is faster for them. The best approach therefore is it try all options on your test suite and see what is faster.
 
-If you are using ActiveRecord then take a look at the [additional options](#additional-activerecord-options-for-truncation) available for `:truncation`.
+## Strategy configuration options
 
-## Configuration options
+The transaction strategy accepts no options.
 
-<table>
-  <tbody>
-    <tr>
-      <th>ORM</th>
-      <th>How to access</th>
-      <th>Notes</th>
-    </tr>
-    <tr>
-      <td> Active Record </td>
-      <td> <code>DatabaseCleaner[:active_record]</code></td>
-      <td> Connection specified as <code>:symbol</code> keys, loaded from <code>config/database.yml</code>. You may also pass in the ActiveRecord model under the <code>:model</code> key.</td>
-    </tr>
-  </tbody>
-</table>
+The truncation and deletion strategies may accept the following options:
 
-### Additional ActiveRecord options for Truncation
+* `:only` and `:except` may take a list of table names:
 
-The following options are available for ActiveRecord's `:truncation` and `:deletion` strategy for any DB.
+```ruby
+# Only truncate the "users" table.
+DatabaseCleaner[:active_record].strategy = :truncation, { only: ["users"] }
 
-* `:pre_count` - When set to `true` this will check each table for existing rows before truncating it.  This can speed up test suites when many of the tables to be truncated are never populated. Defaults to `:false`. (Also, see the section on [What strategy is fastest?](#what-strategy-is-fastest))
+# Delete all tables except the "users" table.
+DatabaseCleaner[:active_record].strategy = :deletion, { except: ["users"] }
+```
+
+* `:pre_count` - When set to `true` this will check each table for existing rows before truncating or deleting it.  This can speed up test suites when many of the tables are never populated. Defaults to `false`. (Also, see the section on [What strategy is fastest?](#what-strategy-is-fastest))
+
 * `:cache_tables` - When set to `true` the list of tables to truncate or delete from will only be read from the DB once, otherwise it will be read before each cleanup run. Set this to `false` if (1) you create and drop tables in your tests, or (2) you change Postgres schemas (`ActiveRecord::Base.connection.schema_search_path`) in your tests (for example, in a multitenancy setup with each tenant in a different Postgres schema). Defaults to `true`.
+
+## Adapter configuration options
+
+`#db` defaults to the default ActiveRecord database, but can be specified manually in a few ways:
+
+```ruby
+# ActiveRecord connection key
+DatabaseCleaner[:active_record].db = :logs
+
+# Back to default:
+DatabaseCleaner[:active_record].db = :default
+
+# Multiple databases can be specified:
+DatabaseCleaner[:sequel, connection: :default]
+DatabaseCleaner[:sequel, connection: :logs]
+```
 
 ## Common Errors
 
@@ -88,11 +85,11 @@ If you are using Postgres and have foreign key constraints, the truncation strat
 
 To silence these warnings set the following log level in your `postgresql.conf` file:
 
-```ruby
+```
 client_min_messages = warning
 ```
 
-For ActiveRecord, you add the following parameter in your database.yml file:
+You can also add this parameter to your database.yml file:
 
 <pre>
 test:

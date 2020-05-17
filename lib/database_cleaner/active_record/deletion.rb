@@ -64,14 +64,7 @@ module DatabaseCleaner
       end
 
       def information_schema_exists? connection
-        return false unless connection.adapter_name == "Mysql2"
-        @information_schema_exists ||=
-          begin
-            connection.execute("SELECT 1 FROM information_schema.tables")
-            true
-          rescue
-            false
-          end
+        connection.adapter_name == "Mysql2"
       end
     end
   end

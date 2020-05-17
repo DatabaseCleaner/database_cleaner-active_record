@@ -5,7 +5,6 @@ module DatabaseCleaner
   module ActiveRecord
     class Deletion < Truncation
       def clean
-        connection = connection_class.connection
         connection.disable_referential_integrity do
           if pre_count? && connection.respond_to?(:pre_count_tables)
             delete_tables(connection, connection.pre_count_tables(tables_to_truncate(connection)))

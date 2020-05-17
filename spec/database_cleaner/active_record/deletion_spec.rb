@@ -67,7 +67,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
           end
 
           it "should not delete from views" do
-            allow(connection).to receive(:database_cleaner_view_cache).and_return(["users"])
+            allow(strategy.send(:connection)).to receive(:database_cleaner_view_cache).and_return(["users"])
 
             expect { strategy.clean }
               .to change { [User.count, Agent.count] }
@@ -82,7 +82,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
           it "only delete from non-empty tables" do
             User.create!
 
-            expect(strategy).to receive(:delete_table).with(connection, 'users')
+            expect(strategy).to receive(:delete_table).with(strategy.send(:connection), 'users')
             strategy.clean
           end
         end
@@ -94,9 +94,9 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
             if helper.db == :mysql2
               expect(strategy).to receive(:build_table_stats_query).once.and_return("")
             elsif helper.db == :postgres
-              expect(connection).to receive(:tables_with_schema).once.and_return([])
+              expect(strategy.send(:connection)).to receive(:tables_with_schema).once.and_return([])
             else
-              expect(connection).to receive(:database_tables).once.and_return([])
+              expect(strategy.send(:connection)).to receive(:database_tables).once.and_return([])
             end
 
             strategy.clean
@@ -111,9 +111,9 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
             if helper.db == :mysql2
               expect(strategy).to receive(:build_table_stats_query).twice.and_return("")
             elsif helper.db == :postgres
-              expect(connection).to receive(:tables_with_schema).twice.and_return([])
+              expect(strategy.send(:connection)).to receive(:tables_with_schema).twice.and_return([])
             else
-              expect(connection).to receive(:database_tables).twice.and_return([])
+              expect(strategy.send(:connection)).to receive(:database_tables).twice.and_return([])
             end
 
             strategy.clean

@@ -1,16 +1,5 @@
+require "delegate"
 require 'active_record/base'
-require 'active_record/connection_adapters/abstract_adapter'
-
-#Load available connection adapters
-%w(
-  abstract_mysql_adapter postgresql_adapter sqlite3_adapter mysql2_adapter oracle_enhanced_adapter
-).each do |known_adapter|
-  begin
-    require "active_record/connection_adapters/#{known_adapter}"
-  rescue LoadError
-  end
-end
-
 require 'database_cleaner/active_record/base'
 
 module DatabaseCleaner
@@ -231,26 +220,6 @@ module DatabaseCleaner
       end
     end
     private_constant :ConnectionAdapters
-
-    #Apply adapter decoraters where applicable (adapter should be loaded)
-    ::ActiveRecord::ConnectionAdapters::AbstractAdapter.class_eval { include ConnectionAdapters::AbstractAdapter }
-
-    if defined?(::ActiveRecord::ConnectionAdapters::JdbcAdapter)
-      if defined?(::ActiveRecord::ConnectionAdapters::OracleJdbcConnection)
-        ::ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include ConnectionAdapters::OracleAdapter }
-      else
-        ::ActiveRecord::ConnectionAdapters::JdbcAdapter.class_eval { include ConnectionAdapters::TruncateOrDelete }
-      end
-    end
-
-    ::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
-    ::ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval { include ConnectionAdapters::AbstractMysqlAdapter } if defined?(::ActiveRecord::ConnectionAdapters::Mysql2Adapter)
-    ::ActiveRecord::ConnectionAdapters::SQLite3Adapter.class_eval { include ConnectionAdapters::SQLiteAdapter } if defined?(::ActiveRecord::ConnectionAdapters::SQLite3Adapter)
-    ::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.class_eval { include ConnectionAdapters::PostgreSQLAdapter } if defined?(::ActiveRecord::ConnectionAdapters::PostgreSQLAdapter)
-
-    ::ActiveRecord::ConnectionAdapters::IBM_DBAdapter.class_eval { include ConnectionAdapters::IBM_DBAdapter } if defined?(::ActiveRecord::ConnectionAdapters::IBM_DBAdapter)
-    ::ActiveRecord::ConnectionAdapters::SQLServerAdapter.class_eval { include ConnectionAdapters::TruncateOrDelete } if defined?(::ActiveRecord::ConnectionAdapters::SQLServerAdapter)
-    ::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter.class_eval { include ConnectionAdapters::OracleAdapter } if defined?(::ActiveRecord::ConnectionAdapters::OracleEnhancedAdapter)
   end
 end
 
@@ -271,7 +240,6 @@ module DatabaseCleaner
       end
 
       def clean
-        connection = connection_class.connection
         connection.disable_referential_integrity do
           if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
             connection.pre_count_truncate_tables(tables_to_truncate(connection))
@@ -282,6 +250,10 @@ module DatabaseCleaner
       end
 
       private
+
+      def connection
+        @connection ||= ConnectionWrapper.new(connection_class.connection)
+      end
 
       def tables_to_truncate(connection)
         if @only.none?
@@ -306,6 +278,31 @@ module DatabaseCleaner
       def pre_count?
         @pre_count == true
       end
+
+      class ConnectionWrapper < SimpleDelegator
+        def initialize(connection)
+          extend ConnectionAdapters::AbstractAdapter
+          case connection.adapter_name
+          when "Mysql2"
+            extend ConnectionAdapters::AbstractMysqlAdapter
+          when "SQLite"
+            extend ConnectionAdapters::AbstractMysqlAdapter
+            extend ConnectionAdapters::SQLiteAdapter
+          when "PostgreSQL"
+            extend ConnectionAdapters::AbstractMysqlAdapter
+            extend ConnectionAdapters::PostgreSQLAdapter
+          when "SQLServer"
+            extend ConnectionAdapters::TruncateOrDelete
+          when "IBM_DB"
+            extend ConnectionAdapters::IBM_DBAdapter
+          when "Oracle", "OracleEnhanced"
+            extend ConnectionAdapters::OracleAdapter
+          end
+          super(connection)
+        end
+
+      end
+      private_constant :ConnectionWrapper
     end
   end
 end

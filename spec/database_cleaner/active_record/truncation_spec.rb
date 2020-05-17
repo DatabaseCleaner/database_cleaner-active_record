@@ -15,8 +15,8 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
       let(:connection) { helper.connection }
 
       before do
-        allow(connection).to receive(:disable_referential_integrity).and_yield
-        allow(connection).to receive(:database_cleaner_view_cache).and_return([])
+        allow(strategy.send(:connection)).to receive(:disable_referential_integrity).and_yield
+        allow(strategy.send(:connection)).to receive(:database_cleaner_view_cache).and_return([])
       end
 
       describe '#clean' do
@@ -72,7 +72,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           end
 
           it "should not truncate views" do
-            allow(connection).to receive(:database_cleaner_view_cache).and_return(["users"])
+            allow(strategy.send(:connection)).to receive(:database_cleaner_view_cache).and_return(["users"])
 
             expect { strategy.clean }
               .to change { [User.count, Agent.count] }
@@ -87,28 +87,32 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           it "only truncates non-empty tables" do
             User.create!
 
-            expect(connection).to receive(:truncate_tables).with(['users'])
+            expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users'])
             strategy.clean
           end
         end
 
         context 'when :cache_tables is set to true' do
-          it 'caches the list of tables to be truncated' do
-            expect(connection).to receive(:database_cleaner_table_cache).and_return([])
-            expect(connection).not_to receive(:tables)
+          subject(:strategy) { described_class.new(cache_tables: true) }
 
-            allow(connection).to receive(:truncate_tables)
-            described_class.new(cache_tables: true).clean
+          it 'caches the list of tables to be truncated' do
+            expect(strategy.send(:connection)).to receive(:database_cleaner_table_cache).and_return([])
+            expect(strategy.send(:connection)).not_to receive(:tables)
+
+            allow(strategy.send(:connection)).to receive(:truncate_tables)
+            subject.clean
           end
         end
 
         context 'when :cache_tables is set to false' do
-          it 'does not cache the list of tables to be truncated' do
-            expect(connection).not_to receive(:database_cleaner_table_cache)
-            expect(connection).to receive(:database_tables).and_return([])
+          subject(:strategy) { described_class.new(cache_tables: false) }
 
-            allow(connection).to receive(:truncate_tables)
-            described_class.new(cache_tables: false).clean
+          it 'does not cache the list of tables to be truncated' do
+            expect(strategy.send(:connection)).not_to receive(:database_cleaner_table_cache)
+            expect(strategy.send(:connection)).to receive(:database_tables).and_return([])
+
+            allow(strategy.send(:connection)).to receive(:truncate_tables)
+            strategy.clean
           end
         end
       end

@@ -98,14 +98,8 @@ module DatabaseCleaner
           tables
         end
 
-        def truncate_table(table_name)
-          raise NotImplementedError
-        end
-
         def truncate_tables(tables)
-          tables.each do |table_name|
-            self.truncate_table(table_name)
-          end
+          tables.each { |t| truncate_table(t) }
         end
       end
 
@@ -114,23 +108,12 @@ module DatabaseCleaner
           execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
         end
 
-        def truncate_tables(tables)
-          tables.each { |t| truncate_table(t) }
-        end
-
         def pre_count_truncate_tables(tables)
           truncate_tables(pre_count_tables(tables))
         end
 
         def pre_count_tables(tables)
           tables.select { |table| has_been_used?(table) }
-        end
-
-        def has_been_used?(table)
-          return has_rows?(table) unless has_sequence?(table)
-
-          cur_val = select_value("SELECT currval('#{table}_id_seq');").to_i rescue 0
-          cur_val > 0
         end
 
         private
@@ -186,12 +169,9 @@ module DatabaseCleaner
         private
 
         def fetch_sequences
-          if uses_sequence?
-            results = select_all("SELECT * FROM sqlite_sequence")
-            Hash[results.rows]
-          else
-            {}
-          end
+          return {} unless uses_sequence?
+          results = select_all("SELECT * FROM sqlite_sequence")
+          Hash[results.rows]
         end
 
         def has_been_used?(table, sequences)
@@ -212,10 +192,6 @@ module DatabaseCleaner
       module PostgreSQLAdapter
         def database_tables
           tables_with_schema
-        end
-
-        def truncate_table(table_name)
-          truncate_tables([table_name])
         end
 
         def truncate_tables(table_names)

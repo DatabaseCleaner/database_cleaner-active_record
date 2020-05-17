@@ -4,7 +4,84 @@ require 'database_cleaner/active_record/base'
 
 module DatabaseCleaner
   module ActiveRecord
-    module ConnectionAdapters
+    class Truncation < Base
+      def initialize(opts={})
+        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :reset_ids, :cache_tables]).empty?
+          raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids or :cache_tables. You specified #{opts.keys.join(',')}."
+        end
+
+        @only = Array(opts[:only]).dup
+        @except = Array(opts[:except]).dup
+
+        @pre_count = opts[:pre_count]
+        @reset_ids = opts[:reset_ids]
+        @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
+      end
+
+      def clean
+        connection.disable_referential_integrity do
+          if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
+            connection.pre_count_truncate_tables(tables_to_truncate(connection))
+          else
+            connection.truncate_tables(tables_to_truncate(connection))
+          end
+        end
+      end
+
+      private
+
+      def connection
+        @connection ||= ConnectionWrapper.new(connection_class.connection)
+      end
+
+      def tables_to_truncate(connection)
+        if @only.none?
+          all_tables = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
+          @only = all_tables.map { |table| table.split(".").last }
+        end
+        @except += connection.database_cleaner_view_cache + migration_storage_names
+        @only - @except
+      end
+
+      def migration_storage_names
+        [
+          DatabaseCleaner::ActiveRecord::Base.migration_table_name,
+          ::ActiveRecord::Base.internal_metadata_table_name,
+        ]
+      end
+
+      def cache_tables?
+        !!@cache_tables
+      end
+
+      def pre_count?
+        @pre_count == true
+      end
+    end
+
+    class ConnectionWrapper < SimpleDelegator
+      def initialize(connection)
+        extend AbstractAdapter
+        case connection.adapter_name
+        when "Mysql2"
+          extend AbstractMysqlAdapter
+        when "SQLite"
+          extend AbstractMysqlAdapter
+          extend SQLiteAdapter
+        when "PostgreSQL"
+          extend AbstractMysqlAdapter
+          extend PostgreSQLAdapter
+
+        when "IBM_DB"
+          extend IBM_DBAdapter
+        when "Oracle", "OracleEnhanced"
+          extend OracleAdapter
+        when "SQLServer"
+          extend TruncateOrDelete
+        end
+        super(connection)
+      end
+
       module AbstractAdapter
         # used to be called views but that can clash with gems like schema_plus
         # this gem is not meant to be exposing such an extra interface any way
@@ -84,12 +161,6 @@ module DatabaseCleaner
         end
       end
 
-      module IBM_DBAdapter
-        def truncate_table(table_name)
-          execute("TRUNCATE #{quote_table_name(table_name)} IMMEDIATE")
-        end
-      end
-
       module SQLiteAdapter
         def delete_table(table_name)
           execute("DELETE FROM #{quote_table_name(table_name)};")
@@ -135,22 +206,6 @@ module DatabaseCleaner
         # Returns a boolean indicating if the SQLite database is using the sqlite_sequence table.
         def uses_sequence?
           select_value("SELECT name FROM sqlite_master WHERE type='table' AND name='sqlite_sequence';")
-        end
-      end
-
-      module TruncateOrDelete
-        def truncate_table(table_name)
-          begin
-            execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
-          rescue ::ActiveRecord::StatementInvalid
-            execute("DELETE FROM #{quote_table_name(table_name)};")
-          end
-        end
-      end
-
-      module OracleAdapter
-        def truncate_table(table_name)
-          execute("TRUNCATE TABLE #{quote_table_name(table_name)}")
         end
       end
 
@@ -218,91 +273,30 @@ module DatabaseCleaner
           rows.collect { |result| result.first }
         end
       end
-    end
-    private_constant :ConnectionAdapters
-  end
-end
 
-module DatabaseCleaner
-  module ActiveRecord
-    class Truncation < Base
-      def initialize(opts={})
-        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :reset_ids, :cache_tables]).empty?
-          raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids or :cache_tables. You specified #{opts.keys.join(',')}."
+      module IBM_DBAdapter
+        def truncate_table(table_name)
+          execute("TRUNCATE #{quote_table_name(table_name)} IMMEDIATE")
         end
-
-        @only = Array(opts[:only]).dup
-        @except = Array(opts[:except]).dup
-
-        @pre_count = opts[:pre_count]
-        @reset_ids = opts[:reset_ids]
-        @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
       end
 
-      def clean
-        connection.disable_referential_integrity do
-          if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
-            connection.pre_count_truncate_tables(tables_to_truncate(connection))
-          else
-            connection.truncate_tables(tables_to_truncate(connection))
+      module OracleAdapter
+        def truncate_table(table_name)
+          execute("TRUNCATE TABLE #{quote_table_name(table_name)}")
+        end
+      end
+
+      module TruncateOrDelete
+        def truncate_table(table_name)
+          begin
+            execute("TRUNCATE TABLE #{quote_table_name(table_name)};")
+          rescue ::ActiveRecord::StatementInvalid
+            execute("DELETE FROM #{quote_table_name(table_name)};")
           end
         end
       end
-
-      private
-
-      def connection
-        @connection ||= ConnectionWrapper.new(connection_class.connection)
-      end
-
-      def tables_to_truncate(connection)
-        if @only.none?
-          all_tables = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
-          @only = all_tables.map { |table| table.split(".").last }
-        end
-        @except += connection.database_cleaner_view_cache + migration_storage_names
-        @only - @except
-      end
-
-      def migration_storage_names
-        [
-          DatabaseCleaner::ActiveRecord::Base.migration_table_name,
-          ::ActiveRecord::Base.internal_metadata_table_name,
-        ]
-      end
-
-      def cache_tables?
-        !!@cache_tables
-      end
-
-      def pre_count?
-        @pre_count == true
-      end
-
-      class ConnectionWrapper < SimpleDelegator
-        def initialize(connection)
-          extend ConnectionAdapters::AbstractAdapter
-          case connection.adapter_name
-          when "Mysql2"
-            extend ConnectionAdapters::AbstractMysqlAdapter
-          when "SQLite"
-            extend ConnectionAdapters::AbstractMysqlAdapter
-            extend ConnectionAdapters::SQLiteAdapter
-          when "PostgreSQL"
-            extend ConnectionAdapters::AbstractMysqlAdapter
-            extend ConnectionAdapters::PostgreSQLAdapter
-          when "SQLServer"
-            extend ConnectionAdapters::TruncateOrDelete
-          when "IBM_DB"
-            extend ConnectionAdapters::IBM_DBAdapter
-          when "Oracle", "OracleEnhanced"
-            extend ConnectionAdapters::OracleAdapter
-          end
-          super(connection)
-        end
-
-      end
-      private_constant :ConnectionWrapper
     end
+    private_constant :ConnectionWrapper
   end
 end
+

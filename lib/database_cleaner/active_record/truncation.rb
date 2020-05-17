@@ -166,10 +166,6 @@ module DatabaseCleaner
       end
 
       module PostgreSQLAdapter
-        def db_version
-          @db_version ||= postgresql_version
-        end
-
         def database_tables
           tables_with_schema
         end
@@ -277,12 +273,8 @@ module DatabaseCleaner
       def clean
         connection = connection_class.connection
         connection.disable_referential_integrity do
-          if pre_count?
-            if connection.respond_to?(:pre_count_truncate_tables)
-              connection.pre_count_truncate_tables(tables_to_truncate(connection))
-            else
-              raise "DatabaseCleaner does not currently support the :pre_count option for the truncation strategy with #{connection.adapter_name}."
-            end
+          if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
+            connection.pre_count_truncate_tables(tables_to_truncate(connection))
           else
             connection.truncate_tables(tables_to_truncate(connection))
           end

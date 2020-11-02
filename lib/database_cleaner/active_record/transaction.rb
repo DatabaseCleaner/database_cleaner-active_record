@@ -3,20 +3,25 @@ require 'database_cleaner/active_record/base'
 module DatabaseCleaner
   module ActiveRecord
     class Transaction < Base
-      def start
-        # Hack to make sure that the connection is properly set up before cleaning
-        connection_class.connection.transaction {}
+      Error = Class.new(StandardError)
 
-        connection_class.connection.begin_transaction joinable: false
-      end
-
-
-      def clean
-        connection_class.connection_pool.connections.each do |connection|
-          next unless connection.open_transactions > 0
-          connection.rollback_transaction
-        end
+      case ::ActiveRecord::VERSION::MAJOR
+      when 3
+        require 'database_cleaner/active_record/rails3'
+        include DatabaseCleaner::ActiveRecord::Rails3
+      when 4
+        require 'database_cleaner/active_record/rails4'
+        include DatabaseCleaner::ActiveRecord::Rails4
+      when 5
+        require 'database_cleaner/active_record/rails5'
+        include DatabaseCleaner::ActiveRecord::Rails5
+      when 6
+        require 'database_cleaner/active_record/rails6'
+        include DatabaseCleaner::ActiveRecord::Rails6
+      else
+        raise Error, "Major Rails version #{::Rails::VERSION::MAJOR} is unsupported by database_cleaner"
       end
     end
   end
 end
+

@@ -29,12 +29,12 @@ module DatabaseCleaner
       end
 
       def clean
+        return unless @fixture_connections
+
         if @connection_subscriber
           ActiveSupport::Notifications.unsubscribe(@connection_subscriber)
           @connection_subscriber = nil
         end
-
-        return unless @fixture_connections
 
         @fixture_connections.each do |connection|
           connection.rollback_transaction if connection.transaction_open?

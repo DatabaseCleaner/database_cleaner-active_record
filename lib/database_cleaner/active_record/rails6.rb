@@ -17,7 +17,7 @@ module DatabaseCleaner
 
           if spec_name
             begin
-              connection = ActiveRecord::Base.connection_handler.retrieve_connection(spec_name, shard: shard)
+              connection = connection_class.connection_handler.retrieve_connection(spec_name, shard: shard)
             rescue ConnectionNotEstablished
               connection = nil
             end
@@ -32,21 +32,26 @@ module DatabaseCleaner
       end
 
       def clean
-        # Rollback changes if a transaction is active.
-        ActiveSupport::Notifications.unsubscribe(@connection_subscriber) if @connection_subscriber
+        if @connection_subscriber
+          ActiveSupport::Notifications.unsubscribe(@connection_subscriber)
+          @connection_subscriber = nil
+        end
+
+        return unless @fixture_connections
+
         @fixture_connections.each do |connection|
           connection.rollback_transaction if connection.transaction_open?
           connection.pool.lock_thread = false
         end
         @fixture_connections.clear
 
-        ActiveRecord::Base.clear_active_connections!
+        connection_class.clear_active_connections!
       end
 
       def enlist_fixture_connections
         setup_shared_connection_pool
 
-        ActiveRecord::Base.connection_handler.connection_pool_list.map(&:connection)
+        connection_class.connection_handler.connection_pool_list.map(&:connection)
       end
 
       private
@@ -58,10 +63,10 @@ module DatabaseCleaner
       # need to share a connection pool so that the reading connection
       # can see data in the open transaction on the writing connection.
       def setup_shared_connection_pool
-        if ActiveRecord::Base.legacy_connection_handling
-          writing_handler = ActiveRecord::Base.connection_handlers[ActiveRecord::Base.writing_role]
+        if connection_class.legacy_connection_handling
+          writing_handler = connection_class.connection_handlers[connection_class.writing_role]
 
-          ActiveRecord::Base.connection_handlers.values.each do |handler|
+          connection_class.connection_handlers.values.each do |handler|
             if handler != writing_handler
               handler.connection_pool_names.each do |name|
                 writing_pool_manager = writing_handler.send(:owner_to_pool_manager)[name]
@@ -76,12 +81,12 @@ module DatabaseCleaner
             end
           end
         else
-          handler = ActiveRecord::Base.connection_handler
+          handler = connection_class.connection_handler
 
           handler.connection_pool_names.each do |name|
             pool_manager = handler.send(:owner_to_pool_manager)[name]
             pool_manager.shard_names.each do |shard_name|
-              writing_pool_config = pool_manager.get_pool_config(ActiveRecord::Base.writing_role, shard_name)
+              writing_pool_config = pool_manager.get_pool_config(connection_class.writing_role, shard_name)
               pool_manager.role_names.each do |role|
                 next unless pool_manager.get_pool_config(role, shard_name)
                 pool_manager.set_pool_config(role, shard_name, writing_pool_config)

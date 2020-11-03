@@ -6,12 +6,6 @@ module DatabaseCleaner
       Error = Class.new(StandardError)
 
       case ::ActiveRecord::VERSION::MAJOR
-      when 3
-        require 'database_cleaner/active_record/rails3'
-        include DatabaseCleaner::ActiveRecord::Rails3
-      when 4
-        require 'database_cleaner/active_record/rails4'
-        include DatabaseCleaner::ActiveRecord::Rails4
       when 5
         require 'database_cleaner/active_record/rails5'
         include DatabaseCleaner::ActiveRecord::Rails5

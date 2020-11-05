@@ -63,7 +63,7 @@ module DatabaseCleaner
       # need to share a connection pool so that the reading connection
       # can see data in the open transaction on the writing connection.
       def setup_shared_connection_pool
-        writing_handler = connection_class.connection_handlers[ActiveRecord::Base.writing_role]
+        writing_handler = connection_class.connection_handlers[connection_class.writing_role]
 
         connection_class.connection_handlers.values.each do |handler|
           if handler != writing_handler

@@ -45,19 +45,24 @@ module DatabaseCleaner
       private
 
       def load_config
-        if self.db != :default && self.db.is_a?(Symbol) && File.file?(DatabaseCleaner::ActiveRecord.config_file_location)
+        if db != :default && db.is_a?(Symbol) && File.file?(DatabaseCleaner::ActiveRecord.config_file_location)
           connection_details = YAML::load(ERB.new(IO.read(DatabaseCleaner::ActiveRecord.config_file_location)).result)
-          @connection_hash   = valid_config(connection_details)[self.db.to_s]
+          @connection_hash   = valid_config(connection_details, db.to_s)
         end
       end
 
-      def valid_config(connection_file)
-        if !::ActiveRecord::Base.configurations.nil? && !::ActiveRecord::Base.configurations.empty?
-          if connection_file != ::ActiveRecord::Base.configurations
-            return ::ActiveRecord::Base.configurations
-          end
+      def valid_config(connection_file, db)
+        return connection_file[db] unless (active_record_config_hash = active_record_config_hash_for(db))
+
+        active_record_config_hash
+      end
+
+      def active_record_config_hash_for(db)
+        if ::ActiveRecord.version >= Gem::Version.new('6.1')
+          ::ActiveRecord::Base.configurations&.configs_for(name: db)&.configuration_hash
+        else
+          ::ActiveRecord::Base.configurations[db]
         end
-        connection_file
       end
 
       def lookup_from_connection_pool

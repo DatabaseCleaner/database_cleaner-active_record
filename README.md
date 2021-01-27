@@ -73,8 +73,8 @@ DatabaseCleaner[:active_record].db = :logs
 DatabaseCleaner[:active_record].db = :default
 
 # Multiple databases can be specified:
-DatabaseCleaner[:active_record, connection: :default]
-DatabaseCleaner[:active_record, connection: :logs]
+DatabaseCleaner[:active_record, db: :default]
+DatabaseCleaner[:active_record, db: :logs]
 ```
 
 ## Common Errors

@@ -10,8 +10,11 @@ if ENV['COVERAGE'] == 'true'
     puts "required codecov"
   end
 
+  # ensure all test run coverage results are merged
+  command_name = File.basename(ENV["BUNDLE_GEMFILE"])
+  SimpleCov.command_name command_name
   SimpleCov.start
-  puts "required simplecov"
+  puts "started simplecov: #{command_name}"
 end
 
 require 'database_cleaner-active_record'

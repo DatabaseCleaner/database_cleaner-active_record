@@ -1,6 +1,7 @@
 require 'active_record'
 require 'database_cleaner/active_record/base'
 require 'database_cleaner/spec'
+require './spec/support/database_helper'
 
 module DatabaseCleaner
   module ActiveRecord
@@ -131,12 +132,32 @@ module DatabaseCleaner
         end
 
         context "when connection_hash is set" do
-          let(:hash) { {} }
-          before { strategy.connection_hash = hash }
+          let(:helper) { DatabaseHelper.new(:sqlite3) }
+          let(:hash) { helper.send(:default_config) }
 
-          it "establishes a connection with it" do
-            expect(::ActiveRecord::Base).to receive(:establish_connection).with(hash)
-            expect(strategy.connection_class).to eq ::ActiveRecord::Base
+          around do |example|
+            helper.setup
+            strategy.connection_hash = hash
+            example.run
+            helper.teardown
+          end
+
+          context "and there are no models" do
+            before do
+              allow(::ActiveRecord::Base).to receive(:descendants).and_return([])
+            end
+
+            it "establishes a connection with it" do
+              expect(::ActiveRecord::Base).to receive(:establish_connection).with(hash)
+              expect(strategy.connection_class).to eq ::ActiveRecord::Base
+            end
+          end
+
+          context "and there are models" do
+
+            it "fetches from connection pool" do
+              expect(strategy.connection_class.to_s).to eq "Kernel::User"
+            end
           end
         end
       end

@@ -8,7 +8,7 @@ mysql2:
   encoding: utf8
 
 postgres:
-  adapter: postgresql
+  adapter: postgis
   database: database_cleaner_test
   username: postgres
   password:

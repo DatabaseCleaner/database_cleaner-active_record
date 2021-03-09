@@ -67,7 +67,7 @@ module DatabaseCleaner
         when "SQLite"
           extend AbstractMysqlAdapter
           extend SQLiteAdapter
-        when "PostgreSQL"
+        when "PostgreSQL", "PostGIS"
           extend AbstractMysqlAdapter
           extend PostgreSQLAdapter
         end

@@ -33,6 +33,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           before do
             2.times { User.create! }
             2.times { Agent.create! }
+            UserProfile.create!(user_id: User.first.id) if helper.db == :postgres
           end
 
           it "should truncate all tables" do
@@ -40,6 +41,13 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
               .to change { [User.count, Agent.count] }
               .from([2,2])
               .to([0,0])
+          end
+
+          if helper.db == :postgres
+            it "should raise exception when trying to truncate table referenced in a foreign key constraint" do
+              expect { described_class.new(except: ['user_profiles']).clean }
+                .to raise_error(ActiveRecord::StatementInvalid, /cannot truncate a table referenced in a foreign key constraint/)
+            end
           end
 
           it "should reset AUTO_INCREMENT index of table" do

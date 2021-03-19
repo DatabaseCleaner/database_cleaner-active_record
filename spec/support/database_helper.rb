@@ -11,6 +11,7 @@ class DatabaseHelper < DatabaseCleaner::Spec::DatabaseHelper
   def setup
     Kernel.const_set "User", Class.new(ActiveRecord::Base)
     Kernel.const_set "Agent", Class.new(ActiveRecord::Base)
+    Kernel.const_set "UserProfile", Class.new(ActiveRecord::Base) if db == :postgres
 
     super
 
@@ -25,6 +26,7 @@ class DatabaseHelper < DatabaseCleaner::Spec::DatabaseHelper
 
     Kernel.send :remove_const, "User" if defined?(User)
     Kernel.send :remove_const, "Agent" if defined?(Agent)
+    Kernel.send :remove_const, "UserProfile" if defined?(UserProfile)
   end
 
   private
@@ -32,5 +34,26 @@ class DatabaseHelper < DatabaseCleaner::Spec::DatabaseHelper
   def establish_connection(config = default_config)
     ActiveRecord::Base.establish_connection(config)
     @connection = ActiveRecord::Base.connection
+  end
+
+  def load_schema
+    super
+
+    if db == :postgres
+      connection.execute <<-SQL
+        CREATE TABLE IF NOT EXISTS user_profiles (
+          user_id INTEGER,
+          FOREIGN KEY(user_id) REFERENCES users(id)
+        );
+      SQL
+    end
+  end
+
+  def drop_db
+    if db == :postgres
+      connection.execute "DROP TABLE IF EXISTS user_profiles"
+    end
+
+    super
   end
 end

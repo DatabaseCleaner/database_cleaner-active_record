@@ -189,7 +189,7 @@ module DatabaseCleaner
 
         def truncate_tables(table_names)
           return if table_names.nil? || table_names.empty?
-          execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} RESTART IDENTITY CASCADE;")
+          execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} RESTART IDENTITY RESTRICT;")
         end
 
         def pre_count_truncate_tables(tables)

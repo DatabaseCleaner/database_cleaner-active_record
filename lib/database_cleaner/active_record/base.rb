@@ -69,8 +69,10 @@ module DatabaseCleaner
         return unless ::ActiveRecord::Base.respond_to?(:descendants)
 
         database_name = connection_hash['database'] || connection_hash[:database]
+        adapter = connection_hash['adapter'] || connection_hash[:adapter]
         ::ActiveRecord::Base.descendants.select(&:connection_pool).detect do |model|
-          database_for(model) == database_name
+          config = config_for(model)
+          config[:database] == database_name && config[:adapter] == adapter
         end
       end
 
@@ -79,7 +81,7 @@ module DatabaseCleaner
         ::ActiveRecord::Base
       end
 
-      def database_for(model)
+      def config_for(model)
         if model.connection_pool.respond_to?(:db_config) # ActiveRecord >= 6.1
           model.connection_pool.db_config.configuration_hash[:database]
         else

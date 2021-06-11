@@ -1,2 +1,3 @@
 my_db:
+  adapter: sqlite3
   database: <%= "ONE".downcase %>

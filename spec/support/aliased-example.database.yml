@@ -1,0 +1,11 @@
+default: &default
+  encoding: utf8
+  reconnect: true
+
+my_db:
+  <<: *default
+  database: <%= "ONE".downcase %>
+
+other_db:
+  <<: *default
+  database: <%= "TWO".downcase %>

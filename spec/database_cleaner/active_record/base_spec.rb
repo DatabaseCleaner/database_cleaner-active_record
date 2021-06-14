@@ -38,6 +38,23 @@ module DatabaseCleaner
           expect(strategy.connection_hash).to eq({ 'database' => 'one' })
         end
 
+        context 'when the configs are aliased' do
+          let(:other_db) { :other_db }
+          let(:config_location) { 'spec/support/aliased-example.database.yml' }
+
+          it 'loads configs correctly' do
+            strategy.db = my_db
+            expected_hash = { 'database' => 'one',
+                              'encoding' => 'utf8',
+                              'reconnect' => true }
+            expect(strategy.connection_hash).to eq(expected_hash)
+
+            strategy.db = other_db
+            expected_hash.merge!('database' => 'two')
+            expect(strategy.connection_hash).to eq(expected_hash)
+          end
+        end
+
         context 'when ActiveRecord configuration contains a config for the given db' do
           if ::ActiveRecord.version >= Gem::Version.new('6.1')
             context 'ActiveRecord >= 6.1' do

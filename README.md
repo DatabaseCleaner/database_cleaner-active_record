@@ -1,6 +1,6 @@
 # Database Cleaner Adapter for ActiveRecord
 
-[![Build Status](https://travis-ci.org/DatabaseCleaner/database_cleaner-active_record.svg?branch=master)](https://travis-ci.org/DatabaseCleaner/database_cleaner-active_record)
+[![Tests](https://github.com/DatabaseCleaner/database_cleaner-active_record/actions/workflows/ci.yml/badge.svg)](https://github.com/DatabaseCleaner/database_cleaner-active_record/actions/workflows/ci.yml)
 [![Code Climate](https://codeclimate.com/github/DatabaseCleaner/database_cleaner-active_record/badges/gpa.svg)](https://codeclimate.com/github/DatabaseCleaner/database_cleaner-active_record)
 [![codecov](https://codecov.io/gh/DatabaseCleaner/database_cleaner-active_record/branch/master/graph/badge.svg)](https://codecov.io/gh/DatabaseCleaner/database_cleaner-active_record)
 

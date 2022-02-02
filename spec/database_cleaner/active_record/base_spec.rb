@@ -156,7 +156,7 @@ module DatabaseCleaner
           context "and there are models" do
 
             it "fetches from connection pool" do
-              expect(strategy.connection_class.to_s).to eq "Kernel::User"
+              expect(["Kernel::Agent", "Kernel::User"]).to include(strategy.connection_class.to_s)
             end
           end
         end

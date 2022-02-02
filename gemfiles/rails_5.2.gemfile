@@ -3,8 +3,7 @@
 source "https://rubygems.org"
 
 gem "database_cleaner-core", git: "https://github.com/DatabaseCleaner/database_cleaner"
-gem "rails", "~>5.2.0"
-gem "byebug"
+gem "rails", "~> 5.2.0"
 
 group :test do
   gem "simplecov", require: false

@@ -19,11 +19,25 @@ module DatabaseCleaner
       def delete_tables(connection, table_names)
         table_names.each do |table_name|
           delete_table(connection, table_name)
+          reset_id_sequence(connection, table_name) if @reset_ids
         end
       end
 
       def delete_table connection, table_name
         connection.execute("DELETE FROM #{connection.quote_table_name(table_name)}")
+      end
+
+      def reset_id_sequence connection, table_name
+        case connection.adapter_name
+        when 'Mysql2'
+          connection.execute("ALTER TABLE #{table_name} AUTO_INCREMENT = 1;")
+        when 'SQLite'
+          connection.execute("delete from sqlite_sequence where name='#{table_name}';")
+        when 'PostgreSQL'
+          connection.reset_pk_sequence!(table_name)
+        else
+          raise "reset_id option not supported for #{connection.adapter_name}"
+        end
       end
 
       def tables_to_truncate(connection)

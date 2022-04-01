@@ -61,6 +61,8 @@ DatabaseCleaner[:active_record].strategy = DatabaseCleaner::ActiveRecord::Deleti
 
 * `:cache_tables` - When set to `true` the list of tables to truncate or delete from will only be read from the DB once, otherwise it will be read before each cleanup run. Set this to `false` if (1) you create and drop tables in your tests, or (2) you change Postgres schemas (`ActiveRecord::Base.connection.schema_search_path`) in your tests (for example, in a multitenancy setup with each tenant in a different Postgres schema). Defaults to `true`.
 
+* `:reset_ids` - Only valid for deletion strategy, when set to `true` resets ids to 1 after each table is cleaned.
+
 ## Adapter configuration options
 
 `#db` defaults to the default ActiveRecord database, but can be specified manually in a few ways:

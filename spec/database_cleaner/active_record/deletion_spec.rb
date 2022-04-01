@@ -42,6 +42,14 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
             expect(User.create.id).to eq 3
           end
 
+          context "reset_ids option set to true" do
+            subject(:strategy) { described_class.new(reset_ids: true) }
+            it "should reset AUTO_INCREMENT index of table" do
+              strategy.clean
+              expect(User.create.id).to eq 1
+            end
+          end
+
           it "should delete from all tables except for schema_migrations" do
             expect { strategy.clean }
               .to_not change { connection.select_value("select count(*) from schema_migrations;").to_i }

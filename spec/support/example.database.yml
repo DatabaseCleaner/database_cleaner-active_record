@@ -1,2 +1,9 @@
 my_db:
   database: <%= "ONE".downcase %>
+
+default: &default
+  adapter: sqlite3
+
+inherited:
+  <<: *default
+  database: example.sqlite3

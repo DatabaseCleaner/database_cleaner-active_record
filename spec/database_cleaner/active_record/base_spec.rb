@@ -105,6 +105,13 @@ module DatabaseCleaner
             expect(strategy.connection_hash).not_to be
           end
         end
+
+        context 'database.yml with YAML inheritance' do
+          it 'should process erb in the config' do
+            strategy.db = :inherited
+            expect(strategy.connection_hash).to include('adapter' => 'sqlite3')
+          end
+        end
       end
 
       describe "connection_class" do

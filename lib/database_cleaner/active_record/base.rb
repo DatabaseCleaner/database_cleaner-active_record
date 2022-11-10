@@ -46,7 +46,12 @@ module DatabaseCleaner
 
       def load_config
         if db != :default && db.is_a?(Symbol) && File.file?(DatabaseCleaner::ActiveRecord.config_file_location)
-          connection_details = YAML::load(ERB.new(IO.read(DatabaseCleaner::ActiveRecord.config_file_location)).result)
+          connection_details =
+            if RUBY_VERSION.match?(/\A2\.5/)
+              YAML.safe_load(ERB.new(IO.read(DatabaseCleaner::ActiveRecord.config_file_location)).result, [], [], true)
+            else
+              YAML.safe_load(ERB.new(IO.read(DatabaseCleaner::ActiveRecord.config_file_location)).result, aliases: true)
+            end
           @connection_hash   = valid_config(connection_details, db.to_s)
         end
       end

@@ -62,7 +62,7 @@ module DatabaseCleaner
                 allow(::ActiveRecord::Base)
                   .to receive(:configurations).and_return(ac_db_configurations_mock)
                 allow(ac_db_configurations_mock)
-                  .to receive(:configs_for).with(name: my_db.to_s).and_return(hash_config_mock)
+                  .to receive(:configs_for).with({ name: my_db.to_s }).and_return(hash_config_mock)
               end
 
               let(:ac_db_configurations_mock) do

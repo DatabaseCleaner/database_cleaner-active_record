@@ -16,6 +16,9 @@ module DatabaseCleaner
     class Base < DatabaseCleaner::Strategy
       def self.migration_table_name
         ::ActiveRecord::SchemaMigration.table_name
+      rescue NoMethodError # Rails 7.1 the class was refactored
+        # https://github.com/rails/rails/pull/45908#issuecomment-1403294948
+        ::ActiveRecord::SchemaMigration.new(1).table_name
       end
 
       def self.exclusion_condition(column_name)

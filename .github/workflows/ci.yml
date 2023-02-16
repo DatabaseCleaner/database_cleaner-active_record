@@ -45,6 +45,7 @@ jobs:
           bundler-cache: true # 'bundle install' and cache
       - name: Upgrade rubygems
         run: gem update --system
+        if: ${{ matrix.ruby == '7.1' }}
       - name: Copy config file
         run: cp spec/support/sample.config.yml spec/support/config.yml
       - name: Run tests

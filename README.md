@@ -1,6 +1,6 @@
 # Database Cleaner Adapter for ActiveRecord
 
-[![Build Status](https://travis-ci.org/DatabaseCleaner/database_cleaner-active_record.svg?branch=master)](https://travis-ci.org/DatabaseCleaner/database_cleaner-active_record)
+[![Tests](https://github.com/DatabaseCleaner/database_cleaner-active_record/actions/workflows/ci.yml/badge.svg)](https://github.com/DatabaseCleaner/database_cleaner-active_record/actions/workflows/ci.yml)
 [![Code Climate](https://codeclimate.com/github/DatabaseCleaner/database_cleaner-active_record/badges/gpa.svg)](https://codeclimate.com/github/DatabaseCleaner/database_cleaner-active_record)
 [![codecov](https://codecov.io/gh/DatabaseCleaner/database_cleaner-active_record/branch/master/graph/badge.svg)](https://codecov.io/gh/DatabaseCleaner/database_cleaner-active_record)
 
@@ -51,10 +51,10 @@ The truncation and deletion strategies may accept the following options:
 
 ```ruby
 # Only truncate the "users" table.
-DatabaseCleaner[:active_record].strategy = :truncation, only: ["users"]
+DatabaseCleaner[:active_record].strategy = DatabaseCleaner::ActiveRecord::Truncation.new(only: ["users"])
 
 # Delete all tables except the "users" table.
-DatabaseCleaner[:active_record].strategy = :deletion, except: ["users"]
+DatabaseCleaner[:active_record].strategy = DatabaseCleaner::ActiveRecord::Deletion.new(except: ["users"])
 ```
 
 * `:pre_count` - When set to `true` this will check each table for existing rows before truncating or deleting it.  This can speed up test suites when many of the tables are never populated. Defaults to `false`. (Also, see the section on [What strategy is fastest?](#what-strategy-is-fastest))

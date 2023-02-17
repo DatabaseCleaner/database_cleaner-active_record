@@ -11,7 +11,7 @@ postgres:
   adapter: postgresql
   database: database_cleaner_test
   username: postgres
-  password:
+  password: postgres
   host: 127.0.0.1
   encoding: unicode
   template: template0

@@ -62,7 +62,7 @@ module DatabaseCleaner
       def initialize(connection)
         extend AbstractAdapter
         case connection.adapter_name
-        when "Mysql2"
+        when "Mysql2", "Trilogy"
           extend AbstractMysqlAdapter
         when "SQLite"
           extend AbstractMysqlAdapter

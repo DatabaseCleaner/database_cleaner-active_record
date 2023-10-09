@@ -3,7 +3,7 @@ require 'database_cleaner/spec/database_helper'
 
 class DatabaseHelper < DatabaseCleaner::Spec::DatabaseHelper
   def self.with_all_dbs &block
-    %w[mysql2 sqlite3 postgres].map(&:to_sym).each do |db|
+    %w[mysql2 sqlite3 postgres trilogy].map(&:to_sym).each do |db|
       yield new(db)
     end
   end

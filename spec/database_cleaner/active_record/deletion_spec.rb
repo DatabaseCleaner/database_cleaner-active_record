@@ -91,7 +91,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
           subject(:strategy) { described_class.new(cache_tables: true) }
 
           it 'caches the list of tables to be deleted from' do
-            if helper.db == :mysql2
+            if [:mysql2, :trilogy].include?(helper.db)
               expect(strategy).to receive(:build_table_stats_query).once.and_return("")
             elsif helper.db == :postgres
               expect(strategy.send(:connection)).to receive(:tables_with_schema).once.and_return([])
@@ -108,7 +108,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Deletion do
           subject(:strategy) { described_class.new(cache_tables: false) }
 
           it 'does not cache the list of tables to be deleted from' do
-            if helper.db == :mysql2
+            if [:mysql2, :trilogy].include?(helper.db)
               expect(strategy).to receive(:build_table_stats_query).twice.and_return("")
             elsif helper.db == :postgres
               expect(strategy.send(:connection)).to receive(:tables_with_schema).twice.and_return([])

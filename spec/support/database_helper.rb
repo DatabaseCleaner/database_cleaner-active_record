@@ -3,7 +3,9 @@ require 'database_cleaner/spec/database_helper'
 
 class DatabaseHelper < DatabaseCleaner::Spec::DatabaseHelper
   def self.with_all_dbs &block
-    %w[mysql2 sqlite3 postgres trilogy].map(&:to_sym).each do |db|
+    all_dbs = %w[mysql2 sqlite3 postgres]
+    all_dbs << :trilogy if Gem::Version.new(ActiveRecord::VERSION::STRING) >= Gem::Version.new("7.1.0")
+    all_dbs.map(&:to_sym).each do |db|
       yield new(db)
     end
   end
@@ -37,7 +39,26 @@ class DatabaseHelper < DatabaseCleaner::Spec::DatabaseHelper
   end
 
   def load_schema
-    super
+    id_column = case db
+      when :sqlite3
+        "id INTEGER PRIMARY KEY AUTOINCREMENT"
+      when :mysql2, :trilogy
+        "id INTEGER PRIMARY KEY AUTO_INCREMENT"
+      when :postgres
+        "id SERIAL PRIMARY KEY"
+      end
+    connection.execute <<-SQL
+      CREATE TABLE IF NOT EXISTS users (
+        #{id_column},
+        name INTEGER
+      );
+    SQL
+
+    connection.execute <<-SQL
+      CREATE TABLE IF NOT EXISTS agents (
+        name INTEGER
+      );
+    SQL
 
     if db == :postgres
       connection.execute <<-SQL

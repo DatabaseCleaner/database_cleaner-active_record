@@ -39,7 +39,26 @@ class DatabaseHelper < DatabaseCleaner::Spec::DatabaseHelper
   end
 
   def load_schema
-    super
+    id_column = case db
+      when :sqlite3
+        "id INTEGER PRIMARY KEY AUTOINCREMENT"
+      when :mysql2, :trilogy
+        "id INTEGER PRIMARY KEY AUTO_INCREMENT"
+      when :postgres
+        "id SERIAL PRIMARY KEY"
+      end
+    connection.execute <<-SQL
+      CREATE TABLE IF NOT EXISTS users (
+        #{id_column},
+        name INTEGER
+      );
+    SQL
+
+    connection.execute <<-SQL
+      CREATE TABLE IF NOT EXISTS agents (
+        name INTEGER
+      );
+    SQL
 
     if db == :postgres
       connection.execute <<-SQL

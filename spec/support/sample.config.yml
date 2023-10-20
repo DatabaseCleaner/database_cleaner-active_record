@@ -8,7 +8,7 @@ mysql2:
   encoding: utf8
 
 trilogy:
-  adapter: trilogy 
+  adapter: trilogy
   database: database_cleaner_test
   username: root
   password:

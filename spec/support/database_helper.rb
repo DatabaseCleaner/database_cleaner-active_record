@@ -3,7 +3,9 @@ require 'database_cleaner/spec/database_helper'
 
 class DatabaseHelper < DatabaseCleaner::Spec::DatabaseHelper
   def self.with_all_dbs &block
-    %w[mysql2 sqlite3 postgres trilogy].map(&:to_sym).each do |db|
+    all_dbs = %w[mysql2 sqlite3 postgres]
+    all_dbs << :trilogy if Gem::Version.new(ActiveRecord::VERSION::STRING) >= Gem::Version.new("7.1.0")
+    all_dbs.map(&:to_sym).each do |db|
       yield new(db)
     end
   end

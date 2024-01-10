@@ -29,7 +29,7 @@ module DatabaseCleaner
 
       def reset_id_sequence connection, table_name
         case connection.adapter_name
-        when 'Mysql2'
+        when 'Mysql2', 'Trilogy'
           connection.execute("ALTER TABLE #{table_name} AUTO_INCREMENT = 1;")
         when 'SQLite'
           connection.execute("delete from sqlite_sequence where name='#{table_name}';")

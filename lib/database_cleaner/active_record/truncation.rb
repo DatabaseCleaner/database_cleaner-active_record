@@ -20,9 +20,9 @@ module DatabaseCleaner
       def clean
         connection.disable_referential_integrity do
           if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
-            connection.pre_count_truncate_tables(tables_to_truncate(connection))
+            connection.pre_count_truncate_tables(tables_to_clean(connection))
           else
-            connection.truncate_tables(tables_to_truncate(connection))
+            connection.truncate_tables(tables_to_clean(connection))
           end
         end
       end
@@ -33,7 +33,7 @@ module DatabaseCleaner
         @connection ||= ConnectionWrapper.new(connection_class.connection)
       end
 
-      def tables_to_truncate(connection)
+      def tables_to_clean(connection)
         if @only.none?
           all_tables = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
           @only = all_tables.map { |table| table.split(".").last }

@@ -7,9 +7,9 @@ module DatabaseCleaner
       def clean
         connection.disable_referential_integrity do
           if pre_count? && connection.respond_to?(:pre_count_tables)
-            delete_tables(connection, connection.pre_count_tables(tables_to_truncate(connection)))
+            delete_tables(connection, connection.pre_count_tables(tables_to_clean(connection)))
           else
-            delete_tables(connection, tables_to_truncate(connection))
+            delete_tables(connection, tables_to_clean(connection))
           end
         end
       end
@@ -40,7 +40,7 @@ module DatabaseCleaner
         end
       end
 
-      def tables_to_truncate(connection)
+      def tables_to_clean(connection)
         if information_schema_exists?(connection)
           @except += connection.database_cleaner_view_cache + migration_storage_names
           (@only.any? ? @only : tables_with_new_rows(connection)) - @except

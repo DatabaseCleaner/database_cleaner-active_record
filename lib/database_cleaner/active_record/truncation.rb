@@ -36,16 +36,12 @@ module DatabaseCleaner
       end
 
       def tables_to_truncate
-        if @only.none?
-          all_tables = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
-          @only = all_tables.map { |table| table.split(".").last }
-        end
         @except += connection.database_cleaner_view_cache + migration_storage_names
 
         if pre_count? && connection.respond_to?(:pre_count_tables)
-          connection.pre_count_tables(@only - @except)
+          connection.pre_count_tables(only - @except)
         else
-          @only - @except
+          only - @except
         end
       end
 
@@ -62,6 +58,14 @@ module DatabaseCleaner
 
       def pre_count?
         @pre_count == true
+      end
+
+      def only
+        if @only.none?
+          all_tables = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
+          @only = all_tables.map { |table| table.split(".").last }
+        end
+        @only
       end
     end
 

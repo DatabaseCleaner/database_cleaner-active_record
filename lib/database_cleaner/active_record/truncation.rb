@@ -19,11 +19,7 @@ module DatabaseCleaner
 
       def clean
         connection.disable_referential_integrity do
-          if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
-            connection.pre_count_truncate_tables(tables_to_truncate(connection))
-          else
-            connection.truncate_tables(tables_to_truncate(connection))
-          end
+          connection.truncate_tables(tables_to_truncate)
         end
       end
 
@@ -33,13 +29,14 @@ module DatabaseCleaner
         @connection ||= ConnectionWrapper.new(connection_class.connection)
       end
 
-      def tables_to_truncate(connection)
-        if @only.none?
-          all_tables = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
-          @only = all_tables.map { |table| table.split(".").last }
-        end
+      def tables_to_truncate
         @except += connection.database_cleaner_view_cache + migration_storage_names
-        @only - @except
+
+        if pre_count? && connection.respond_to?(:pre_count_tables)
+          connection.pre_count_tables(only - @except)
+        else
+          only - @except
+        end
       end
 
       def migration_storage_names
@@ -55,6 +52,14 @@ module DatabaseCleaner
 
       def pre_count?
         @pre_count == true
+      end
+
+      def only
+        if @only.none?
+          all_tables = cache_tables? ? connection.database_cleaner_table_cache : connection.database_tables
+          @only = all_tables.map { |table| table.split(".").last }
+        end
+        @only
       end
     end
 
@@ -102,10 +107,6 @@ module DatabaseCleaner
       end
 
       module AbstractMysqlAdapter
-        def pre_count_truncate_tables(tables)
-          truncate_tables(pre_count_tables(tables))
-        end
-
         def pre_count_tables(tables)
           tables.select { |table| has_been_used?(table) }
         end
@@ -150,10 +151,6 @@ module DatabaseCleaner
           tables.each { |t| truncate_table(t) }
         end
 
-        def pre_count_truncate_tables(tables)
-          truncate_tables(pre_count_tables(tables))
-        end
-
         def pre_count_tables(tables)
           sequences = fetch_sequences
           tables.select { |table| has_been_used?(table, sequences) }
@@ -190,10 +187,6 @@ module DatabaseCleaner
         def truncate_tables(table_names)
           return if table_names.nil? || table_names.empty?
           execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} RESTART IDENTITY RESTRICT;")
-        end
-
-        def pre_count_truncate_tables(tables)
-          truncate_tables(pre_count_tables(tables))
         end
 
         def pre_count_tables(tables)

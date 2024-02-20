@@ -84,8 +84,11 @@ module DatabaseCleaner
       end
 
       def establish_connection
-        ::ActiveRecord::Base.establish_connection(connection_hash)
-        ::ActiveRecord::Base
+        # creates a temporary ActiveRecord class that is unique to connection_hash
+        ActiveRecord.module_eval("class Temp#{connection_hash.hash.abs} < ::ActiveRecord::Base; self; end")
+          .tap { |ar_class|
+            ar_class.establish_connection(connection_hash)
+          }
       end
 
       def database_for(model)

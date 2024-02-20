@@ -63,6 +63,8 @@ DatabaseCleaner[:active_record].strategy = DatabaseCleaner::ActiveRecord::Deleti
 
 * `:reset_ids` - Only valid for deletion strategy, when set to `true` resets ids to 1 after each table is cleaned.
 
+* `:truncate_option` - Only valid for PostgreSQL. Acceptable values are `:restrict` and `:cascade`. Default is `:restrict`
+
 ## Adapter configuration options
 
 `#db` defaults to the default ActiveRecord database, but can be specified manually in a few ways:

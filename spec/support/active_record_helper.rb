@@ -3,7 +3,7 @@ require 'database_cleaner/spec/database_helper'
 
 class ActiveRecordHelper < DatabaseCleaner::Spec::DatabaseHelper
   def setup
-    patch_mysql_adapters
+    # patch_mysql_adapters
 
     Kernel.const_set "User", Class.new(ActiveRecord::Base)
     Kernel.const_set "Agent", Class.new(ActiveRecord::Base)

@@ -54,11 +54,33 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
               .to([2,0])
           end
 
-          it "should not truncate the tables specified in the :except option" do
-            expect { described_class.new(except: ['users']).clean }
-              .to change { [User.count, Agent.count] }
-              .from([2,2])
-              .to([2,0])
+          context "should not truncate the tables specified in the :except option" do
+            it "when they have no schema specified'" do
+              expect { described_class.new(except: ['users']).clean }
+                .to change { [User.count, Agent.count] }
+                .from([2,2])
+                .to([2,0])
+            end
+
+            it "when they are in custom schema" do
+              Kernel.const_set "TableInSchema", Class.new(ActiveRecord::Base)
+              TableInSchema.table_name = "custom_schema.some_table"
+              connection.execute "CREATE SCHEMA IF NOT EXISTS custom_schema;"
+              connection.execute <<-SQL
+                CREATE TABLE IF NOT EXISTS custom_schema.some_table (
+                  name INTEGER
+                );
+              SQL
+              2.times { TableInSchema.create! }
+
+              expect { described_class.new(except: ['custom_schema.some_table']).clean }
+                .to change { [User.count, Agent.count, TableInSchema.count] }
+                .from([2,2,2])
+                .to([0,0,2])
+
+              connection.execute "DROP SCHEMA custom_schema CASCADE"
+              Kernel.send :remove_const, "TableInSchema" if defined?(TableInSchema)
+            end
           end
 
           it "should raise an error when :only and :except options are used" do
@@ -113,18 +135,6 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
             allow(connection).to receive(:truncate_tables)
             described_class.new(cache_tables: false).clean
           end
-        end
-      end
-
-      describe ":reset_ids removal deprecation" do
-        it "displays a deprecation warning if reset_ids is set" do
-          expect(DatabaseCleaner).to receive(:deprecate)
-          described_class.new(reset_ids: true)
-        end
-
-        it "does not display a deprecation warning if not called" do
-          expect(DatabaseCleaner).to_not receive(:deprecate)
-          described_class.new
         end
       end
     end

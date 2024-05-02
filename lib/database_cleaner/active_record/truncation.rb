@@ -218,7 +218,7 @@ module DatabaseCleaner
         def has_been_used?(table)
           return has_rows?(table) unless has_sequence?(table)
 
-          cur_val = select_value("SELECT currval('#{table}_id_seq');").to_i rescue 0
+          cur_val = select_value("SELECT last_value from #{table}_id_seq;").to_i
           cur_val > 0
         end
 

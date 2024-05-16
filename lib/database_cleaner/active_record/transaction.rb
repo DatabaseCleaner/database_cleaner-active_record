@@ -1,5 +1,3 @@
-require 'database_cleaner/active_record/base'
-
 module DatabaseCleaner
   module ActiveRecord
     class Transaction < Base

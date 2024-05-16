@@ -1,4 +1,3 @@
-require 'active_record'
 require 'database_cleaner/strategy'
 require 'erb'
 require 'yaml'

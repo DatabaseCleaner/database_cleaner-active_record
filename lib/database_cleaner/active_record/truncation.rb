@@ -1,5 +1,4 @@
 require "delegate"
-require 'database_cleaner/active_record/base'
 
 module DatabaseCleaner
   module ActiveRecord

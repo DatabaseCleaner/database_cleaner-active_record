@@ -1,6 +1,3 @@
-require 'active_record'
-require 'database_cleaner/active_record/truncation'
-
 module DatabaseCleaner
   module ActiveRecord
     class Deletion < Truncation

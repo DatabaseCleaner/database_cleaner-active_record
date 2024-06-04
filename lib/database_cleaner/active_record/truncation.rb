@@ -30,7 +30,13 @@ module DatabaseCleaner
       private
 
       def connection
-        @connection ||= ConnectionWrapper.new(connection_class.connection)
+        @connection ||= ConnectionWrapper.new(
+          if ::ActiveRecord.version >= Gem::Version.new("7.2")
+            connection_class.lease_connection
+          else
+            connection_class.connection
+          end
+        )
       end
 
       def tables_to_truncate(connection)
@@ -246,4 +252,3 @@ module DatabaseCleaner
     private_constant :ConnectionWrapper
   end
 end
-

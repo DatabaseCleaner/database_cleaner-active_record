@@ -4,10 +4,16 @@ module DatabaseCleaner
   module ActiveRecord
     class Transaction < Base
       def start
-        # Hack to make sure that the connection is properly set up before cleaning
-        connection_class.connection.transaction {}
+        connection = if ::ActiveRecord.version >= Gem::Version.new("7.2")
+          connection_class.lease_connection
+        else
+          connection_class.connection
+        end
 
-        connection_class.connection.begin_transaction joinable: false
+        # Hack to make sure that the connection is properly set up before cleaning
+        connection.transaction {}
+
+        connection.begin_transaction joinable: false
       end
 
 

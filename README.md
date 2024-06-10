@@ -8,7 +8,7 @@ Clean your ActiveRecord databases with Database Cleaner.
 
 See https://github.com/DatabaseCleaner/database_cleaner for more information.
 
-For support or to discuss development please use the [Google Group](https://groups.google.com/group/database_cleaner).
+For support or to discuss development please use GitHub Issues.
 
 ## Installation
 
@@ -97,7 +97,7 @@ You can also add this parameter to your database.yml file:
 test:
   adapter: postgresql
   # ...
-  min_messages: WARNING  
+  min_messages: WARNING
 </pre>
 
 ## COPYRIGHT

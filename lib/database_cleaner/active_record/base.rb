@@ -15,9 +15,9 @@ module DatabaseCleaner
 
     class Base < DatabaseCleaner::Strategy
       def self.migration_table_name
-        if Gem::Version.new("7.1.0") < ::ActiveRecord.version
+        if ::ActiveRecord::Base.connection_pool.respond_to?(:schema_migration) # Rails >= 7.2
           ::ActiveRecord::Base.connection_pool.schema_migration.table_name
-        elsif Gem::Version.new("6.0.0") <= ::ActiveRecord.version
+        elsif ::ActiveRecord::Base.connection.respond_to?(:schema_migration) # Rails >= 6.0
           ::ActiveRecord::Base.connection.schema_migration.table_name
         else
           ::ActiveRecord::SchemaMigration.table_name

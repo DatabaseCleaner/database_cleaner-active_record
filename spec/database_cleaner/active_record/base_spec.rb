@@ -166,7 +166,8 @@ module DatabaseCleaner
 
             it "establishes a connection with it" do
               expect(::ActiveRecord::Base).to receive(:establish_connection).with(hash)
-              expect(strategy.connection_class).to eq ::ActiveRecord::Base
+              expect(strategy.connection_class).to be < ::ActiveRecord::Base
+              expect(strategy.connection_class.name).to match /^DatabaseCleaner::ActiveRecord::Temp\d+$/
             end
           end
 

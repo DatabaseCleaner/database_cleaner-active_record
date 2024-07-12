@@ -19,8 +19,10 @@ module DatabaseCleaner
 
       def clean
         connection_class.connection_pool.connections.each do |connection|
-          next unless connection.open_transactions > 0
-          connection.rollback_transaction
+          connection.lock.synchronize do
+            next unless connection.open_transactions > 0
+            connection.rollback_transaction
+          end
         end
       end
     end

@@ -17,25 +17,31 @@ module DatabaseCleaner
       end
 
       def clean
-        connection.disable_referential_integrity do
-          if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
-            connection.pre_count_truncate_tables(tables_to_clean(connection))
-          else
-            connection.truncate_tables(tables_to_clean(connection))
+        with_all_databases do |connection|
+          connection.disable_referential_integrity do
+            if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
+              connection.pre_count_truncate_tables(tables_to_clean(connection))
+            else
+              connection.truncate_tables(tables_to_clean(connection))
+            end
           end
         end
       end
 
       private
 
-      def connection
-        @connection ||= ConnectionWrapper.new(
-          if ::ActiveRecord.version >= Gem::Version.new("7.2")
-            connection_class.lease_connection
-          else
-            connection_class.connection
+      def with_all_databases
+        if ::ActiveRecord.version >= Gem::Version.new("6.1")
+          connection_class.connection_handler.connection_pools.each do |pool|
+            pool.with_connection do |connection|
+              connection = ConnectionWrapper.new(connection)
+              yield connection
+            end
           end
-        )
+        else
+          connection = ConnectionWrapper.new(connection_class.connection)
+          yield connection
+        end
       end
 
       def tables_to_clean(connection)

@@ -1,11 +1,12 @@
 require "delegate"
+require 'database_cleaner/active_record/base'
 
 module DatabaseCleaner
   module ActiveRecord
     class Truncation < Base
       def initialize(opts={})
-        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :cache_tables, :reset_ids]).empty?
-          raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids, and :cache_tables. You specified #{opts.keys.join(',')}."
+        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :cache_tables, :reset_ids, :truncate_option]).empty?
+          raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids, :cache_tables and :truncate_option. You specified #{opts.keys.join(',')}."
         end
 
         @only = Array(opts[:only]).dup
@@ -13,6 +14,7 @@ module DatabaseCleaner
 
         @reset_ids = opts[:reset_ids]
         @pre_count = opts[:pre_count]
+        @truncate_option = opts[:cascade] || :restrict
         @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
       end
 
@@ -21,7 +23,7 @@ module DatabaseCleaner
           if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
             connection.pre_count_truncate_tables(tables_to_clean(connection))
           else
-            connection.truncate_tables(tables_to_clean(connection))
+            connection.truncate_tables(tables_to_clean(connection), { truncate_option: @truncate_option })
           end
         end
       end
@@ -101,7 +103,7 @@ module DatabaseCleaner
           execute("DELETE FROM #{quote_table_name(table_name)}")
         end
 
-        def truncate_tables(tables)
+        def truncate_tables(tables, opts)
           tables.each { |t| truncate_table(t) }
         end
       end
@@ -151,7 +153,7 @@ module DatabaseCleaner
           end
         end
 
-        def truncate_tables(tables)
+        def truncate_tables(tables, opts)
           tables.each { |t| truncate_table(t) }
         end
 
@@ -192,9 +194,10 @@ module DatabaseCleaner
           tables_with_schema
         end
 
-        def truncate_tables(table_names)
+        def truncate_tables(table_names, opts)
           return if table_names.nil? || table_names.empty?
-          execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} RESTART IDENTITY RESTRICT;")
+
+          execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} RESTART IDENTITY #{opts[:truncate_option]};")
         end
 
         def pre_count_truncate_tables(tables)

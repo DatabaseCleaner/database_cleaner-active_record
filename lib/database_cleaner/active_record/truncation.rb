@@ -14,7 +14,7 @@ module DatabaseCleaner
 
         @reset_ids = opts[:reset_ids]
         @pre_count = opts[:pre_count]
-        @truncate_option = opts[:cascade] || :restrict
+        @truncate_option = opts[:truncate_option] || :restrict
         @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
       end
 

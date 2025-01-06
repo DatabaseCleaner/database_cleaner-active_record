@@ -100,6 +100,28 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           end
         end
 
+        describe "with truncate_option set to cascade" do
+          subject(:strategy) { described_class.new(truncate_option: :cascade) }
+
+          it "specifies cascade when truncating" do
+            User.create!({name: 1})
+
+            expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users', 'agents'], {truncate_option: :cascade})
+            strategy.clean
+          end
+        end
+
+        describe "with no truncate_option set" do
+          subject(:strategy) { described_class.new }
+
+          it "specifies restrict when truncating" do
+            User.create!
+
+            expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users', 'agents'], {truncate_option: :restrict})
+            strategy.clean
+          end
+        end
+
         context 'when :cache_tables is set to true' do
           subject(:strategy) { described_class.new(cache_tables: true) }
 

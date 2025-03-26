@@ -1,5 +1,7 @@
 # Development (unreleased)
 
+* Fixes issue with CASCADE vs RESTRICT: https://github.com/DatabaseCleaner/database_cleaner-active_record/issues/62
+
 ## v2.2.0 2024-07-12
 
 * Fix "ERROR:  currval of sequence" in Postgres adapter: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/103

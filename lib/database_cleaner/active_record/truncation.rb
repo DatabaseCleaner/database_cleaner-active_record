@@ -4,8 +4,8 @@ module DatabaseCleaner
   module ActiveRecord
     class Truncation < Base
       def initialize(opts={})
-        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :cache_tables, :reset_ids]).empty?
-          raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids, and :cache_tables. You specified #{opts.keys.join(',')}."
+        if !opts.empty? && !(opts.keys - [:only, :except, :pre_count, :cache_tables, :reset_ids, :restrict]).empty?
+          raise ArgumentError, "The only valid options are :only, :except, :pre_count, :reset_ids, :restrict, and :cache_tables. You specified #{opts.keys.join(',')}."
         end
 
         @only = Array(opts[:only]).dup
@@ -13,6 +13,7 @@ module DatabaseCleaner
 
         @reset_ids = opts[:reset_ids]
         @pre_count = opts[:pre_count]
+        @restrict = !!opts[:restrict]
         @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
       end
 
@@ -194,7 +195,10 @@ module DatabaseCleaner
 
         def truncate_tables(table_names)
           return if table_names.nil? || table_names.empty?
-          execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} RESTART IDENTITY RESTRICT;")
+
+          restrict_or_cascade = @restrict ? "RESTRICT" : "CASCADE"
+
+          execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} RESTART IDENTITY #{restrict_or_cascade};")
         end
 
         def pre_count_truncate_tables(tables)

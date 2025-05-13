@@ -29,4 +29,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "pg"
   spec.add_development_dependency "sqlite3"
   spec.add_development_dependency "trilogy"
+
+  spec.metadata["changelog_uri"] = spec.homepage + "/blob/main/CHANGELOG.md"
 end

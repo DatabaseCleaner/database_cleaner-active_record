@@ -1,5 +1,7 @@
 # Development (unreleased)
 
+* Provide a 'Changelog' link on Rubygems: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/114
+
 ## v2.2.1 2025-05-13
 
 * https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/111 by @tagliala

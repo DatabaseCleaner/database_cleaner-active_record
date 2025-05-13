@@ -1,5 +1,11 @@
 # Development (unreleased)
 
+## v2.2.1 2025-05-13
+
+* https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/111 by @tagliala
+* https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/104 by @fatkodima
+* https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/118 by @pat, @thegeorgeous, and @nnishimura
+
 ## v2.2.0 2024-07-12
 
 * Fix "ERROR:  currval of sequence" in Postgres adapter: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/103

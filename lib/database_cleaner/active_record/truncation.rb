@@ -21,7 +21,7 @@ module DatabaseCleaner
       def clean
         connection.disable_referential_integrity do
           if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
-            connection.pre_count_truncate_tables(tables_to_clean(connection))
+            connection.pre_count_truncate_tables(tables_to_clean(connection), { truncate_option: @truncate_option })
           else
             connection.truncate_tables(tables_to_clean(connection), { truncate_option: @truncate_option })
           end
@@ -109,8 +109,8 @@ module DatabaseCleaner
       end
 
       module AbstractMysqlAdapter
-        def pre_count_truncate_tables(tables)
-          truncate_tables(pre_count_tables(tables))
+        def pre_count_truncate_tables(tables, opts = {})
+          truncate_tables(pre_count_tables(tables), opts)
         end
 
         def pre_count_tables(tables)
@@ -157,8 +157,8 @@ module DatabaseCleaner
           tables.each { |t| truncate_table(t) }
         end
 
-        def pre_count_truncate_tables(tables)
-          truncate_tables(pre_count_tables(tables))
+        def pre_count_truncate_tables(tables, opts = {})
+          truncate_tables(pre_count_tables(tables), opts)
         end
 
         def pre_count_tables(tables)
@@ -200,8 +200,8 @@ module DatabaseCleaner
           execute("TRUNCATE TABLE #{table_names.map{|name| quote_table_name(name)}.join(', ')} RESTART IDENTITY #{opts[:truncate_option]};")
         end
 
-        def pre_count_truncate_tables(tables)
-          truncate_tables(pre_count_tables(tables))
+        def pre_count_truncate_tables(tables, opts = {})
+          truncate_tables(pre_count_tables(tables), opts)
         end
 
         def pre_count_tables(tables)

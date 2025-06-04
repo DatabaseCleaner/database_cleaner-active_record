@@ -1,5 +1,7 @@
 require "bundler/setup"
 
+require "logger" # Fix for Rails 7.0 tests
+
 if ENV['COVERAGE'] == 'true'
   require "simplecov"
 

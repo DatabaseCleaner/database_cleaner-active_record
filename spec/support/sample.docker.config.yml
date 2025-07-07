@@ -2,7 +2,7 @@ mysql2:
   adapter: mysql2
   database: database_cleaner_test
   username: root
-  password:
+  password: mysql
   host: mysql
   port: 3306
   encoding: utf8
@@ -11,7 +11,7 @@ trilogy:
   adapter: trilogy
   database: database_cleaner_test
   username: root
-  password:
+  password: mysql
   host: mysql
   port: 3306
   encoding: utf8

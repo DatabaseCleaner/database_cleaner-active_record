@@ -17,3 +17,13 @@ services:
     ports:
       - "127.0.0.1:6379:6379"
     command: redis-server --save 20 1 --loglevel warning
+  ruby:
+    image: ruby:3.3 # Manually change this based on the desired Ruby version
+    working_dir: /app
+    build: .
+    environment:
+      BUNDLE_GEMFILE: gemfiles/rails_7.2.gemfile # Manually change this based on the desired Rails version
+    depends_on:
+      - mysql
+      - postgres
+      - redis

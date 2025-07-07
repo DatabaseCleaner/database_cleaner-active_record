@@ -2,6 +2,7 @@
 
 * Provide a 'Changelog' link on Rubygems: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/114
 * Fix bundling and CONTRIBUTE.md instructions: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/123
+* https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/121 by @etagwerker
 
 ## v2.2.1 2025-05-13
 

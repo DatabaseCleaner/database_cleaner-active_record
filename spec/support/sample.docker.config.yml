@@ -1,0 +1,33 @@
+mysql2:
+  adapter: mysql2
+  database: database_cleaner_test
+  username: root
+  password: mysql
+  host: mysql
+  port: 3306
+  encoding: utf8
+
+trilogy:
+  adapter: trilogy
+  database: database_cleaner_test
+  username: root
+  password: mysql
+  host: mysql
+  port: 3306
+  encoding: utf8
+
+postgres:
+  adapter: postgresql
+  database: database_cleaner_test
+  username: postgres
+  password: postgres
+  host: postgres
+  encoding: unicode
+  template: template0
+
+sqlite3:
+  adapter: sqlite3
+  database: tmp/database_cleaner_test.sqlite3
+  pool: 5
+  timeout: 5000
+  encoding: utf8

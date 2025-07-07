@@ -102,6 +102,10 @@ test:
   min_messages: WARNING
 </pre>
 
+## Development
+
+Check the CONTRIBUTE.md file for instructions running tests with and withour Docker.
+
 ## COPYRIGHT
 
 See [LICENSE](LICENSE) for details.

@@ -106,7 +106,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           it "specifies cascade when truncating" do
             User.create!({name: 1})
 
-            expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users', 'agents'], {truncate_option: :cascade})
+            expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users', 'agents'].sort, {truncate_option: :cascade})
             strategy.clean
           end
         end
@@ -117,7 +117,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           it "specifies restrict when truncating" do
             User.create!
 
-            expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users', 'agents'], {truncate_option: :restrict})
+            expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users', 'agents'].sort, {truncate_option: :restrict})
             strategy.clean
           end
         end

@@ -104,15 +104,7 @@ test:
 
 ## Development
 
-If you want to test this library locally, you can do so like this:
-
-```
-docker compose run --build --rm ruby /bin/bash
-bundle
-bundle exec rake
-```
-
-You will need Docker installed. The configuration is set up for the latest Ruby, Rails, Postgres, and MySQL versions.
+Check the CONTRIBUTE.md file for instructions running tests with and withour Docker.
 
 ## COPYRIGHT
 

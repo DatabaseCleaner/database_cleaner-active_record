@@ -1,5 +1,7 @@
 # Development (unreleased)
 
+* Fix bundling and CONTRIBUTE.md instructions: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/123
+
 ## v2.2.1 2025-05-13
 
 * https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/111 by @tagliala

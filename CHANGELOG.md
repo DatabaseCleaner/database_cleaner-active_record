@@ -6,6 +6,7 @@
 * https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/121 by @etagwerker
 * Fix order of arguments in `truncate_tables` expectation https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/124
 * Add Docker to make it easier to run tests locally for maintainers and contributors https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/109
+* https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/121 by @etagwerker
 
 ## v2.2.1 2025-05-13
 

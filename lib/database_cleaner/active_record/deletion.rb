@@ -9,6 +9,8 @@ module DatabaseCleaner
             delete_tables(connection, tables_to_clean(connection))
           end
         end
+
+        connection_class.connection_pool.release_connection
       end
 
       private

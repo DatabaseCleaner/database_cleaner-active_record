@@ -6,6 +6,9 @@ gem "database_cleaner-core", git: "https://github.com/DatabaseCleaner/database_c
 gem "rails", "~> 7.0.0"
 gem "sqlite3", "~> 1.7"
 gem "concurrent-ruby", "1.3.4"
+gem "logger"
+gem "mutex_m"
+gem "bigdecimal"
 
 group :test do
   gem "simplecov", require: false

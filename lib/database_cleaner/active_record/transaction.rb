@@ -22,6 +22,8 @@ module DatabaseCleaner
             connection.rollback_transaction
           end
         end
+
+        connection_class.connection_pool.release_connection
       end
     end
   end

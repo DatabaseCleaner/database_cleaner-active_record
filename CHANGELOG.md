@@ -1,5 +1,7 @@
 # Development (unreleased)
 
+## v2.2.2 2025-07-30
+
 * Release database connections after cleaning: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/122
 * Provide a 'Changelog' link on Rubygems: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/114
 * Fix bundling and CONTRIBUTE.md instructions: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/123

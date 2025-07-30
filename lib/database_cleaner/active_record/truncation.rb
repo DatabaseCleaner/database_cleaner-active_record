@@ -26,6 +26,8 @@ module DatabaseCleaner
             connection.truncate_tables(tables_to_clean(connection), { truncate_option: @truncate_option })
           end
         end
+
+        connection_class.connection_pool.release_connection
       end
 
       private

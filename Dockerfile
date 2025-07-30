@@ -13,7 +13,7 @@ ARG BUNDLE_GEMFILE=Gemfile
 ENV BUNDLE_GEMFILE=${BUNDLE_GEMFILE}
 
 # Install any needed packages specified in Gemfile
-RUN bundle install
+RUN ./bin/setup
 
 # Command to run the application
 CMD ["bash"]

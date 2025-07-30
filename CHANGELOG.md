@@ -1,5 +1,6 @@
 # Development (unreleased)
 
+* Release database connections after cleaning: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/122
 * Provide a 'Changelog' link on Rubygems: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/114
 * Fix bundling and CONTRIBUTE.md instructions: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/123
 * Fix order of arguments in `truncate_tables` expectation https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/124

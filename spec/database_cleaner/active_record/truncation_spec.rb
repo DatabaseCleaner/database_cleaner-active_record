@@ -95,7 +95,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
           it "only truncates non-empty tables" do
             User.create!
 
-            expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users'])
+            expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users'], {:truncate_option=>:restrict})
             strategy.clean
           end
         end

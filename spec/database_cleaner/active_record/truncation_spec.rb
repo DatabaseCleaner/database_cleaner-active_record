@@ -4,6 +4,45 @@ require 'database_cleaner/active_record/truncation'
 RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
   subject(:strategy) { described_class.new }
 
+  describe "pre_count option validation" do
+    it "raises ArgumentError for invalid string values" do
+      expect { described_class.new(pre_count: "invalid") }.to raise_error(
+        ArgumentError,
+        /The :pre_count option only accepts true or :smart/
+      )
+    end
+
+    it "raises ArgumentError for numeric values" do
+      expect { described_class.new(pre_count: 123) }.to raise_error(
+        ArgumentError,
+        /The :pre_count option only accepts true or :smart/
+      )
+    end
+
+    it "raises ArgumentError for invalid symbol values" do
+      expect { described_class.new(pre_count: :invalid) }.to raise_error(
+        ArgumentError,
+        /The :pre_count option only accepts true or :smart/
+      )
+    end
+
+    it "accepts true" do
+      expect { described_class.new(pre_count: true) }.not_to raise_error
+    end
+
+    it "accepts :smart" do
+      expect { described_class.new(pre_count: :smart) }.not_to raise_error
+    end
+
+    it "accepts false" do
+      expect { described_class.new(pre_count: false) }.not_to raise_error
+    end
+
+    it "accepts nil" do
+      expect { described_class.new(pre_count: nil) }.not_to raise_error
+    end
+  end
+
   DatabaseHelper.with_all_dbs do |helper|
     context "using a #{helper.db} connection" do
       around do |example|
@@ -97,6 +136,47 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
 
             expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users'], {:truncate_option=>:restrict})
             strategy.clean
+          end
+        end
+
+        describe "with smart pre_count optimization option" do
+          subject(:strategy) { described_class.new(pre_count: :smart) }
+
+          context "with MySQL adapter" do
+            it "only truncates non-empty tables using sys.schema_table_statistics" do
+              skip unless helper.db == :mysql
+              User.create!
+
+              expect(strategy.send(:connection)).to receive(:smart_pre_count_truncate_tables)
+                .with(['users'], {:truncate_option=>:restrict})
+                .and_call_original
+              
+              strategy.clean
+              expect(User.count).to eq(0)
+            end
+
+            it "truncates tables with auto_increment > 1 even if empty" do
+              skip unless helper.db == :mysql
+              
+              # Create and delete a user to increase auto_increment
+              user = User.create!
+              user.destroy
+              
+              expect(User.count).to eq(0)
+              expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users'], {:truncate_option=>:restrict})
+              strategy.clean
+            end
+          end
+
+          context "with non-MySQL adapter" do
+            it "raises NotImplementedError" do
+              skip if helper.db == :mysql
+              
+              expect { strategy.clean }.to raise_error(
+                NotImplementedError,
+                /The :smart pre_count option is only supported for MySQL\/Trilogy adapters/
+              )
+            end
           end
         end
 

@@ -14,13 +14,21 @@ module DatabaseCleaner
 
         @reset_ids = opts[:reset_ids]
         @pre_count = opts[:pre_count]
+        if @pre_count && @pre_count != true && @pre_count != :smart
+          raise ArgumentError, "The :pre_count option only accepts true or :smart. You specified #{@pre_count.inspect}."
+        end
         @truncate_option = opts[:truncate_option] || :restrict
         @cache_tables = opts.has_key?(:cache_tables) ? !!opts[:cache_tables] : true
       end
 
       def clean
         connection.disable_referential_integrity do
-          if pre_count? && connection.respond_to?(:pre_count_truncate_tables)
+          if smart_pre_count?
+            unless connection.respond_to?(:smart_pre_count_truncate_tables)
+              raise NotImplementedError, "The :smart pre_count option is only supported for MySQL/Trilogy adapters. Current adapter: #{connection.adapter_name}"
+            end
+            connection.smart_pre_count_truncate_tables(tables_to_clean(connection), { truncate_option: @truncate_option })
+          elsif pre_count? && connection.respond_to?(:pre_count_truncate_tables)
             connection.pre_count_truncate_tables(tables_to_clean(connection), { truncate_option: @truncate_option })
           else
             connection.truncate_tables(tables_to_clean(connection), { truncate_option: @truncate_option })
@@ -63,7 +71,11 @@ module DatabaseCleaner
       end
 
       def pre_count?
-        @pre_count == true
+        @pre_count == true || @pre_count == :smart
+      end
+
+      def smart_pre_count?
+        @pre_count == :smart
       end
     end
 
@@ -117,6 +129,37 @@ module DatabaseCleaner
 
         def pre_count_tables(tables)
           tables.select { |table| has_been_used?(table) }
+        end
+
+        # Smart pre-count uses sys.schema_table_statistics to retrieve all tables
+        # with rows in a single query, which is more efficient than checking each
+        # table individually.
+        def smart_pre_count_truncate_tables(tables, opts = {})
+          truncate_tables(smart_pre_count_tables(tables), opts)
+        end
+
+        def smart_pre_count_tables(tables)
+          return [] if tables.empty?
+
+          # Query sys.schema_table_statistics to get all tables with rows in one query
+          table_stats = select_all(<<-SQL)
+            SELECT table_name 
+            FROM sys.schema_table_statistics
+            WHERE table_schema = database()
+            AND table_name IN (#{tables.map { |t| quote(t) }.join(', ')})
+            AND table_rows > 0
+          SQL
+          
+          tables_with_rows = table_stats.rows.flatten.to_set
+          
+          # Also check auto_increment values for tables that might be empty but have been used.
+          # This maintains the existing behavior where a table that had rows inserted but was
+          # then emptied will still be truncated to reset the auto_increment counter.
+          tables_with_auto_increment = tables.select do |table|
+            !tables_with_rows.include?(table) && auto_increment_value(table) > 1
+          end
+          
+          (tables_with_rows.to_a + tables_with_auto_increment).uniq
         end
 
         private

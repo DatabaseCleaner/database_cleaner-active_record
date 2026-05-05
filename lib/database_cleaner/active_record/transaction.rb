@@ -1,6 +1,8 @@
 module DatabaseCleaner
   module ActiveRecord
     class Transaction < Base
+      TRANSACTION_PARAMETERS = {}.freeze
+
       def start
         connection = if ::ActiveRecord.version >= Gem::Version.new("7.2")
           connection_class.lease_connection
@@ -9,7 +11,7 @@ module DatabaseCleaner
         end
 
         # Hack to make sure that the connection is properly set up before cleaning
-        connection.transaction {}
+        connection.transaction(**transaction_parameters) { nil }
 
         connection.begin_transaction joinable: false
       end
@@ -24,6 +26,12 @@ module DatabaseCleaner
         end
 
         connection_class.connection_pool.release_connection
+      end
+
+      private
+
+      def transaction_parameters
+        self.class.const_get(:TRANSACTION_PARAMETERS)
       end
     end
   end

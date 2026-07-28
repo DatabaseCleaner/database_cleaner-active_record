@@ -241,8 +241,10 @@ module DatabaseCleaner
         # wrong once Postgres truncates it to fit its 63-byte identifier limit.
         def serial_sequence(table)
           select_value("SELECT pg_get_serial_sequence(#{quote(table)}, 'id')")
-        rescue ::ActiveRecord::StatementInvalid
-          nil # no "id" column at all
+        rescue ::ActiveRecord::StatementInvalid => e
+          raise unless e.cause.is_a?(PG::UndefinedColumn) # no "id" column at all
+
+          nil
         end
 
         def tables_with_schema

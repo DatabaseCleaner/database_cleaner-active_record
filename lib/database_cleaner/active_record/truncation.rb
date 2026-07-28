@@ -237,15 +237,12 @@ module DatabaseCleaner
           select_value("SELECT true FROM #{table} LIMIT 1;")
         end
 
-        # Table names near Postgres' 63-byte identifier limit produce a "#{table}_id_seq" guess
-        # that gets silently truncated by Postgres and no longer matches the real (differently
-        # truncated) sequence name it auto-generated, so look it up instead of guessing it.
+        # Looks up the real sequence name instead of guessing "#{table}_id_seq", which can be
+        # wrong once Postgres truncates it to fit its 63-byte identifier limit.
         def serial_sequence(table)
           select_value("SELECT pg_get_serial_sequence(#{quote(table)}, 'id')")
         rescue ::ActiveRecord::StatementInvalid
-          # table has no "id" column at all (pg_get_serial_sequence raises rather than
-          # returning nil in that case)
-          nil
+          nil # no "id" column at all
         end
 
         def tables_with_schema

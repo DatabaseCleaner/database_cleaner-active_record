@@ -98,6 +98,36 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
             expect(strategy.send(:connection)).to receive(:truncate_tables).with(['users'], {:truncate_option=>:restrict})
             strategy.clean
           end
+
+          if helper.db == :postgres
+            context "with a table name at Postgres' identifier length limit" do
+              # :only this table: the rest of this file leaves "users"/"user_profiles" in whatever
+              # state earlier (mocked) examples left them in, and "user_profiles" has a real FK
+              # onto "users" that RESTRICT would trip on unrelated to what's under test here.
+              subject(:strategy) { described_class.new(pre_count: true, only: [long_table_name]) }
+              let(:long_table_name) { "u" * 58 + "_long" } # 63 chars: Postgres' NAMEDATALEN limit
+
+              before do
+                connection.execute("CREATE TABLE #{long_table_name} (id SERIAL PRIMARY KEY, name INTEGER);")
+              end
+
+              after do
+                connection.execute("DROP TABLE IF EXISTS #{long_table_name};")
+              end
+
+              it "does not raise when checking whether the table has been used" do
+                expect { strategy.clean }.not_to raise_error
+              end
+
+              it "detects activity on the table via its actual (differently-truncated) sequence" do
+                connection.execute("INSERT INTO #{long_table_name} (name) VALUES (1);")
+                connection.execute("INSERT INTO #{long_table_name} (name) VALUES (2);")
+
+                expect(strategy.send(:connection)).to receive(:truncate_tables).with([long_table_name], {truncate_option: :restrict})
+                strategy.clean
+              end
+            end
+          end
         end
 
         describe "with truncate_option set to cascade" do

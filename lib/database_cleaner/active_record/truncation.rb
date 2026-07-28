@@ -226,18 +226,25 @@ module DatabaseCleaner
         # but then the table is cleaned.  In other words, this function tells us if the given table
         # was ever inserted into.
         def has_been_used?(table)
-          return has_rows?(table) unless has_sequence?(table)
+          sequence = serial_sequence(table)
+          return has_rows?(table) unless sequence
 
-          cur_val = select_value("SELECT last_value from #{table}_id_seq;").to_i
+          cur_val = select_value("SELECT last_value from #{sequence};").to_i
           cur_val > 0
-        end
-
-        def has_sequence?(table)
-          select_value("SELECT true FROM pg_class WHERE relname = '#{table}_id_seq';")
         end
 
         def has_rows?(table)
           select_value("SELECT true FROM #{table} LIMIT 1;")
+        end
+
+        # Looks up the real sequence name instead of guessing "#{table}_id_seq", which can be
+        # wrong once Postgres truncates it to fit its 63-byte identifier limit.
+        def serial_sequence(table)
+          select_value("SELECT pg_get_serial_sequence(#{quote(table)}, 'id')")
+        rescue ::ActiveRecord::StatementInvalid => e
+          raise unless e.cause.is_a?(PG::UndefinedColumn) # no "id" column at all
+
+          nil
         end
 
         def tables_with_schema

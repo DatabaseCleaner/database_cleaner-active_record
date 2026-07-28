@@ -101,15 +101,9 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Truncation do
 
           if helper.db == :postgres
             context "with a table name at Postgres' identifier length limit" do
-              # Postgres silently truncates identifiers over 63 bytes. Guessing a table's sequence
-              # name as "#{table}_id_seq" can collide with the (differently truncated) real name,
-              # or even with the table's own name once truncated, so pre_count's has_been_used?
-              # check must look the sequence up instead of guessing it.
-              #
-              # Scoped to :only this table: the rest of this file leaves "users"/"user_profiles" in
-              # whatever state earlier (mocked, never-actually-truncated) examples left them in, and
-              # "user_profiles" has a real FK onto "users" that RESTRICT would trip on unrelated to
-              # what's under test here.
+              # :only this table: the rest of this file leaves "users"/"user_profiles" in whatever
+              # state earlier (mocked) examples left them in, and "user_profiles" has a real FK
+              # onto "users" that RESTRICT would trip on unrelated to what's under test here.
               subject(:strategy) { described_class.new(pre_count: true, only: [long_table_name]) }
               let(:long_table_name) { "u" * 58 + "_long" } # 63 chars: Postgres' NAMEDATALEN limit
 

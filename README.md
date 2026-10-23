@@ -43,7 +43,15 @@ Some people report much faster speeds with `:deletion` while others say `:trunca
 
 ## Strategy configuration options
 
-The transaction strategy accepts no options.
+On Rails 7.2 and later the transaction strategy pins the connection, as Rails' own transactional tests do: it stays leased while the test runs, even across executor wraps that release connections (such as `perform_enqueued_jobs` or a request in a request spec), and every thread uses it, so all of them see the test's uncommitted data.
+
+The transaction strategy accepts the following option:
+
+* `:lock_threads` (Rails 7.2+, default `true`) makes threads take turns on the shared connection, like Rails' `lock_threads`. Set it to `false` only if no two threads query at the same time.
+
+  ```ruby
+  DatabaseCleaner[:active_record].strategy = DatabaseCleaner::ActiveRecord::Transaction.new(lock_threads: false)
+  ```
 
 The truncation and deletion strategies may accept the following options:
 

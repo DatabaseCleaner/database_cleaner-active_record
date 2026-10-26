@@ -14,8 +14,13 @@ module DatabaseCleaner
           # Pin the connection the way Rails' transactional tests do, so it stays leased (and its
           # transaction visible) even when an executor wrap releases connections, and so other
           # threads share it instead of checking out one that can't see the uncommitted data.
-          connection_class.connection_pool.pin_connection!(@lock_threads)
-          @pinned_depth = pinned_depth + 1
+          pool = connection_class.connection_pool
+          pool.pin_connection!(@lock_threads)
+          connection = pool.lease_connection
+          # Rails 7.2-8.1 open the transaction in pin_connection!; later versions leave it to the caller.
+          began_transaction = !connection.transaction_open?
+          connection.begin_transaction(joinable: false, _lazy: false) if began_transaction
+          pins << began_transaction
           return
         end
 
@@ -31,9 +36,12 @@ module DatabaseCleaner
       def clean
         if pin_connection?
           pool = connection_class.connection_pool
-          while pinned_depth > 0
+          until pins.empty?
+            if pins.pop
+              connection = pool.lease_connection
+              connection.rollback_transaction if connection.transaction_open?
+            end
             pool.unpin_connection!
-            @pinned_depth -= 1
           end
           pool.release_connection
           return
@@ -55,8 +63,8 @@ module DatabaseCleaner
         ::ActiveRecord.version >= Gem::Version.new("7.2")
       end
 
-      def pinned_depth
-        @pinned_depth || 0
+      def pins
+        @pins ||= []
       end
     end
   end

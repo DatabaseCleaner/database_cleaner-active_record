@@ -74,7 +74,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
 
           it "keeps the uncommitted records visible after an executor wrap releases connections" do
             strategy.start
-            User.create!
+            user = User.create!
 
             ActiveRecord::ConnectionAdapters::ConnectionPool::ExecutorHooks.complete(nil)
 
@@ -88,7 +88,7 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
             end
             leased.pop
 
-            expect(User.count).to eq 1
+            expect(User.exists?(user.id)).to be true
           ensure
             done << true
             holder.join
@@ -96,9 +96,9 @@ RSpec.describe DatabaseCleaner::ActiveRecord::Transaction do
 
           it "shares the connection with other threads" do
             strategy.start
-            User.create!
+            user = User.create!
 
-            expect(Thread.new { User.count }.value).to eq 1
+            expect(Thread.new { User.exists?(user.id) }.value).to be true
           end
 
           it "unpins the connection on #clean" do

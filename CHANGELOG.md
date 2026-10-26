@@ -1,5 +1,7 @@
 # Development (unreleased)
 
+* Pin the transaction strategy's connection on Rails 7.2+, as Rails' transactional tests do, so an executor wrap can't release it mid-test; add the `:lock_threads` option
+
 ## v2.2.2 2025-07-30
 
 * Release database connections after cleaning: https://github.com/DatabaseCleaner/database_cleaner-active_record/pull/122
